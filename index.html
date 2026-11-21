@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#1b1a18">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>RPN-15 Calculator</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a precise instrument, quiet and tactile; nothing on screen but the calculator.
+   IDEA: the 1982 landscape RPN scientific, its brushed bezel, grey LCD and two-tone keys.
+   PICTURE: the whole faceplate, scaled to fill the phone in landscape (rotated when held upright).
+   COLOUR and TYPE: warm black-brown face, aluminium bezel, gold f and blue g legends; Archivo Narrow.
+   LAYOUT: 1000x560 faceplate scaled to fit; help sheet opens over it at normal reading size. */
+:root{color-scheme:dark;--bg:#151412;--face:#2e2b28;--gold:#dcaa45;--blue:#63afee;--lcd:#a9ae97;--seg:#1c1f17}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;height:100%;background:radial-gradient(120% 90% at 50% 40%,#26241f,var(--bg));overflow:hidden;
+  -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:none;
+  font:16px/1.5 'Archivo Narrow','Arial Narrow',system-ui,sans-serif;color:#eee}
+#calc{position:absolute;left:50%;top:50%;width:1000px;height:560px;transform-origin:50% 50%;border-radius:26px;
+  background:var(--face);box-shadow:0 30px 60px #000a,0 0 0 2px #0008,inset 0 2px 0 #ffffff14;overflow:hidden}
+.bezel{position:absolute;left:0;right:0;top:0;height:150px;display:flex;align-items:center;gap:28px;padding:0 34px;
+  background:repeating-linear-gradient(90deg,#ffffff08 0 1px,transparent 1px 3px),linear-gradient(#d9d9d4,#a6a6a0 92%,#7d7d78);
+  border-bottom:3px solid #191816}
+.window{width:600px;height:118px;border-radius:10px;background:#141414;padding:9px;box-shadow:inset 0 2px 6px #000}
+.glass{width:100%;height:100%;border-radius:4px;background:linear-gradient(#b3b8a1,var(--lcd));box-shadow:inset 0 3px 8px #0006}
+.glass svg{width:100%;height:100%;display:block}
+.seg{fill:var(--seg);opacity:.045}.seg.on{opacity:.92}
+.ann{font:600 13px 'Archivo Narrow',sans-serif;fill:var(--seg);opacity:0}.ann.on{opacity:.9}
+.blink .digits{animation:bl .5s steps(1) infinite}@keyframes bl{50%{opacity:.15}}
+.brand{flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:6px;color:#2d2b28;position:relative;height:118px;justify-content:center}
+.brand b{font:700 44px/1 'Archivo Narrow',sans-serif;letter-spacing:.02em;font-style:italic}
+.brand small{font:600 14px/1 'Archivo Narrow',sans-serif;letter-spacing:.08em}
+.toast{position:absolute;inset:auto 0 0 auto;max-width:300px;font:600 15px/1.2 'Archivo Narrow',sans-serif;color:#1d1c1a;background:#f3f1e8;border-radius:8px;padding:8px 12px;box-shadow:0 4px 12px #0004;opacity:0;transition:opacity .2s;pointer-events:none;text-align:right}
+.toast.on{opacity:1}
+#info{position:absolute;top:50%;left:0;margin-top:-22px;width:44px;height:44px;border-radius:50%;border:2px solid #2d2b28;background:transparent;color:#2d2b28;font:700 22px/1 Georgia,serif;font-style:italic;cursor:pointer}
+.pad{position:absolute;left:24px;right:24px;top:162px;bottom:22px;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));column-gap:16px;row-gap:6px}
+.strip{position:absolute;left:0;right:0;bottom:0;height:12px;background:linear-gradient(#a9a9a3,#6f6f6a)}
+.cell{display:flex;flex-direction:column;position:relative}
+.fl{height:30px;flex:none;display:flex;align-items:flex-end;justify-content:center;color:var(--gold);font:700 15px/1 'Archivo Narrow',sans-serif;white-space:nowrap;padding-bottom:4px}
+.key{flex:1;display:flex;flex-direction:column;border-radius:7px;background:#0d0d0d;cursor:pointer;position:relative;
+  box-shadow:0 3px 0 #000,0 5px 8px #0007;transition:transform .05s}
+.key .tp{flex:1;display:flex;align-items:center;justify-content:center;border-radius:7px 7px 3px 3px;
+  background:linear-gradient(#444,#262626 55%,#1d1d1d);color:#f4f4f0;font:600 23px/1 'Archivo Narrow',sans-serif;box-shadow:inset 0 1px 0 #ffffff22}
+.key .fr{height:22px;flex:none;display:flex;align-items:center;justify-content:center;color:var(--blue);font:700 15px/1 'Archivo Narrow',sans-serif;white-space:nowrap}
+.key.dg .tp{font-size:29px}
+.key.sm .tp{font-size:19px}
+.key.down{transform:translateY(3px);box-shadow:0 0 0 #000,0 2px 3px #0007}
+.key.down .tp{filter:brightness(1.35)}
+.key.kf .tp{background:linear-gradient(#f0c062,var(--gold) 55%,#b98a2f);color:#1c1a16;font-size:30px;font-style:italic}
+.key.kf .fr{background:#8a6a28;border-radius:0 0 7px 7px}
+.key.kg .tp{background:linear-gradient(#8cc8f6,var(--blue) 55%,#3f88c4);color:#10202e;font-size:30px;font-style:italic}
+.key.kg .fr{background:#2f6a99;border-radius:0 0 7px 7px}
+.key.ent .tp{flex-direction:column;font-size:21px;line-height:1.05;letter-spacing:0}
+.enter{grid-row:3/span 2;grid-column:6}
+sup,sub{font-size:.62em;position:relative;vertical-align:baseline;line-height:0}sup{top:-.6em}sub{top:.3em}
+.clear{position:absolute;height:10px;border:2px solid var(--gold);border-bottom:0;border-radius:3px 3px 0 0;pointer-events:none}
+.clear span{position:absolute;left:50%;top:-8px;transform:translateX(-50%);background:var(--face);padding:0 5px;color:var(--gold);font:700 13px/1 'Archivo Narrow',sans-serif;letter-spacing:.03em}
+.pad>.clear{left:calc((100% - 144px)/10 + 12px);width:calc((100% - 144px)/10*4 + 56px);top:calc((100% - 18px)/4*2 + 17px)}
+#help{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;padding:16px;z-index:5;touch-action:auto}
+#help.on{display:flex}
+.sheet{background:#f4f2ea;color:#22201c;border-radius:14px;max-width:640px;width:100%;max-height:100%;overflow:auto;padding:22px 24px 26px;user-select:text;-webkit-user-select:text;font-family:system-ui,sans-serif;touch-action:pan-y}
+.sheet h2{font:700 28px/1.1 'Archivo Narrow',sans-serif;margin:0 0 6px}
+.sheet h3{font:700 19px/1.2 'Archivo Narrow',sans-serif;margin:18px 0 4px}
+.sheet p,.sheet li{font-size:16px;line-height:1.5;margin:4px 0}.sheet ul{padding-left:20px;margin:4px 0}
+.sheet kbd{font:600 14px 'Archivo Narrow',sans-serif;background:#2b2926;color:#fff;border-radius:4px;padding:1px 6px;white-space:nowrap}
+.sheet kbd.f{background:var(--gold);color:#1c1a16}.sheet kbd.g{background:var(--blue);color:#10202e}
+.sheet .x{float:right;min-width:44px;height:44px;border-radius:22px;border:0;background:#2b2926;color:#fff;font:600 16px system-ui;cursor:pointer;padding:0 16px}
+.sheet .note{color:#5c574e;font-size:14px}
+button:focus-visible,.key:focus-visible{outline:3px solid #fff;outline-offset:2px}
+</style>
+</head>
+<body>
+<div id="calc" aria-label="RPN scientific calculator">
+  <div class="bezel">
+    <div class="window"><div class="glass"><svg id="lcd" viewBox="0 0 600 100" aria-live="polite" role="img" aria-label="display"></svg></div></div>
+    <div class="brand">
+      <button id="info" aria-label="How to use">i</button>
+      <b>RPN-15</b><small>SCIENTIFIC</small>
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+  <div class="pad" id="pad"></div>
+  <div class="strip"></div>
+</div>
+
+<div id="help" role="dialog" aria-modal="true" aria-label="How to use">
+  <div class="sheet">
+    <button class="x" id="closeHelp">Close</button>
+    <h2>RPN-15 at a glance</h2>
+    <p class="note">A functional 15C-style emulator. Memory is kept on this device between visits.</p>
+    <h3>Put it on your home screen</h3>
+    <p>In Chrome on Android, open the ⋮ menu and choose <b>Add to Home screen</b> (or <b>Install app</b>). Hold the phone sideways; when it is upright the faceplate turns so you can still use it.</p>
+    <h3>Basics</h3>
+    <ul>
+      <li>RPN: <kbd>2</kbd> <kbd>ENTER</kbd> <kbd>3</kbd> <kbd>+</kbd> gives 5. The stack is X, Y, Z, T.</li>
+      <li><kbd class="f">f</kbd> selects the gold function above a key, <kbd class="g">g</kbd> the blue one on its front.</li>
+      <li><kbd class="f">f</kbd> <kbd>7</kbd> <kbd>4</kbd> sets FIX 4; <kbd class="f">f</kbd> 8 and 9 set SCI and ENG.</li>
+      <li><kbd>STO</kbd>/<kbd>RCL</kbd> take 0–9, <kbd>.</kbd>0–.9, I (<kbd>TAN</kbd>) and (i) (<kbd>COS</kbd>); <kbd>STO</kbd> <kbd>+</kbd> 1 does register arithmetic.</li>
+      <li>Statistics: enter y <kbd>ENTER</kbd> x <kbd>Σ+</kbd>, then <kbd class="g">g</kbd> x̄, s, <kbd class="f">f</kbd> L.R. and ŷ,r. Data lives in R2–R7.</li>
+    </ul>
+    <h3>Programs</h3>
+    <ul>
+      <li><kbd class="g">g</kbd> <kbd>P/R</kbd> enters program mode. Example: <kbd class="f">f</kbd> <kbd>LBL</kbd> <kbd>A</kbd> <kbd class="g">g</kbd> x² <kbd>2</kbd> <kbd>−</kbd> <kbd class="g">g</kbd> <kbd>RTN</kbd>, then <kbd class="g">g</kbd> <kbd>P/R</kbd> again.</li>
+      <li>Run with <kbd class="f">f</kbd> <kbd>A</kbd> or <kbd>GSB</kbd> <kbd>A</kbd>; any key stops a running program.</li>
+      <li>Edit with <kbd>SST</kbd>, <kbd class="g">g</kbd> <kbd>BST</kbd>, <kbd>←</kbd> (delete line) and <kbd>GTO</kbd> <kbd>CHS</kbd> nnn (go to line).</li>
+      <li>Supported: LBL, GTO, GSB/RTN (7 levels), R/S, PSE, DSE, ISG, x≤y, x=0, TEST 0–9, SF/CF/F?, indirect I and (i).</li>
+    </ul>
+    <h3>SOLVE and ∫</h3>
+    <ul>
+      <li>Put two guesses in Y and X, then <kbd class="f">f</kbd> <kbd>SOLVE</kbd> <kbd>A</kbd>. You get the root in X, the previous estimate in Y and f(root) in Z; Error 8 means no root was found.</li>
+      <li>Put the limits in Y and X, then <kbd class="f">f</kbd> <kbd>∫</kbd> <kbd>A</kbd>. You get the integral in X and its uncertainty in Y. The display setting controls accuracy (FIX 4 is good to about 0.00005).</li>
+    </ul>
+    <h3>Memory and errors</h3>
+    <ul>
+      <li>Any key clears an Error message. Error 0 means improper math, 2 bad statistics, 3 bad register, 4 missing label or line, 5 subroutines too deep, 8 no root.</li>
+      <li>Full reset: press <kbd>ON</kbd>, then <kbd>−</kbd>. The display shows Pr Error.</li>
+    </ul>
+    <h3>Computer keyboard</h3>
+    <p>Digits, <kbd>.</kbd> <kbd>+</kbd> <kbd>−</kbd> <kbd>*</kbd> <kbd>/</kbd>, Enter, Backspace; <kbd>f</kbd> <kbd>g</kbd>; <kbd>s</kbd> STO, <kbd>r</kbd> RCL, <kbd>x</kbd> x≷y, <kbd>d</kbd> R↓, <kbd>c</kbd> CHS, <kbd>e</kbd> EEX, <kbd>q</kbd> √x.</p>
+    <h3>Not in this version yet</h3>
+    <p class="note">Matrices (MATRIX, DIM, RESULT), complex numbers (Re≷Im, flag 8) and the ON-key self tests. Those keys show a short note instead.</p>
+  </div>
+</div>
+
+<script>
+/* RPN-15 engine: a functional model of an HP-15C-style calculator.
+   Keys are identified by their row/column keycode ("11".."49"), digits by "0".."9". */
+const HP15 = (() => {
+'use strict';
+const MAXV = 9.999999999e99;
+const PI10 = 3.141592654;
+const MAXLINES = 448;
+
+class CalcError extends Error { constructor(n) { super('Error ' + n); this.code = n; } }
+const err = n => { throw new CalcError(n); };
+
+const isDigit = k => k.length === 1 && k >= '0' && k <= '9';
+const LBLKEYS = { '11': 'A', '12': 'B', '13': 'C', '14': 'D', '15': 'E' };
+const ARITH = { '40': '+', '30': '-', '20': '*', '10': '/' };
+
+// Non-prefixed operations.  Keys starting with '#' open a prefix.
+const UNSHIFT = {
+  '11': 'sqrt', '12': 'exp', '13': 'p10', '14': 'ypx', '15': 'inv', '16': 'chs', '10': 'div',
+  '21': 'SST', '22': '#GTO', '23': 'sin', '24': 'cos', '25': 'tan', '26': 'eex', '20': 'mul',
+  '31': 'rs', '32': '#GSB', '33': 'rdn', '34': 'swap', '35': 'back', '36': 'enter', '30': 'sub',
+  '44': '#STO', '45': '#RCL', '48': 'dot', '49': 'splus', '40': 'add'
+};
+const FSHIFT = {
+  '11': 'gsbA', '12': 'gsbB', '13': 'gsbC', '14': 'gsbD', '15': 'gsbE', '16': 'nyiMatrix',
+  '7': '#FIX', '8': '#SCI', '9': '#ENG', '10': '#SOLVE',
+  '21': '#LBL', '22': '#HYP', '23': 'nyiMatrix', '24': 'nyiMatrix', '25': 'nyiMatrix', '26': 'nyiMatrix',
+  '4': '#XCH', '5': '#DSE', '6': '#ISG', '20': '#INTEG',
+  '31': 'pse', '32': 'clrSigma', '33': 'clrPrgm', '34': 'clrReg', '35': 'clrPrefix', '36': 'ran',
+  '1': 'toR', '2': 'toHMS', '3': 'toRad', '30': 'nyiComplex',
+  '44': 'frac', '45': 'user', '0': 'fact', '48': 'yr', '49': 'lr', '40': 'pyx'
+};
+const GSHIFT = {
+  '11': 'sq', '12': 'ln', '13': 'log', '14': 'pct', '15': 'dpct', '16': 'abs',
+  '7': 'deg', '8': 'rad', '9': 'grd', '10': 'xley',
+  '21': 'BST', '22': '#AHYP', '23': 'asin', '24': 'acos', '25': 'atan', '26': 'pi',
+  '4': '#SF', '5': '#CF', '6': '#FQ', '20': 'xeq0',
+  '31': 'PR', '32': 'rtn', '33': 'rup', '34': 'rnd', '35': 'clx', '36': 'lstx',
+  '1': 'toP', '2': 'toH', '3': 'toDeg', '30': '#TEST',
+  '44': 'int', '45': 'MEM', '0': 'mean', '48': 'sdev', '49': 'sminus', '40': 'cyx'
+};
+// Operations that are never stored as program steps.
+const NONPROG = new Set(['SST', 'BST', 'PR', 'clrPrgm', 'MEM', 'clrPrefix', 'user', 'GTOL', 'nyiMatrix', 'nyiComplex']);
+
+// ---------- number helpers ----------
+function fact(n) { let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; }
+function gamma(z) { // Lanczos approximation
+  if (z < 0.5) return Math.PI / (Math.sin(Math.PI * z) * gamma(1 - z));
+  z -= 1;
+  const g = 7, c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313,
+    -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+  let x = c[0];
+  for (let i = 1; i < g + 2; i++) x += c[i] / (z + i);
+  const t = z + g + 0.5;
+  return Math.sqrt(2 * Math.PI) * Math.pow(t, z + 0.5) * Math.exp(-t) * x;
+}
+const isInt = x => Number.isInteger(x);
+
+// ---------- display formatting ----------
+function group(intStr) { return intStr.replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+// Returns display string: sign cell + 10 digit cells; '.' and ',' attach to the preceding cell.
+function cellLen(s) { let n = 0; for (const ch of s) if (ch !== '.' && ch !== ',') n++; return n; }
+function padCells(s, n, left = false) { const k = cellLen(s); return k >= n ? s : (left ? ' '.repeat(n - k) + s : s + ' '.repeat(n - k)); }
+
+function sciParts(ax, n) { // ax>0, n decimals -> [mantissaStr, exp]
+  const s = ax.toExponential(Math.min(n, 9));
+  let [m, e] = s.split('e');
+  return [m, parseInt(e, 10)];
+}
+function expStr(e) { return (e < 0 ? '-' : ' ') + String(Math.abs(e)).padStart(2, '0'); }
+
+function formatX(x, mode, n) {
+  const sign = x < 0 ? '-' : ' ';
+  const ax = Math.abs(x);
+  if (mode === 'FIX') {
+    if (ax === 0) return sign + padCells('0.' + '0'.repeat(Math.min(n, 9)), 10);
+    if (ax < 1e10) {
+      const ip = Math.floor(ax).toString().length;
+      const dec = Math.max(0, Math.min(n, 10 - ip));
+      const r = Number(ax.toFixed(dec));
+      if (r !== 0 && r < 1e10) {
+        let [i, f] = ax.toFixed(dec).split('.');
+        if (i.length <= 10) return sign + padCells(group(i) + '.' + (f || ''), 10);
+      }
+    }
+    mode = 'SCI'; // falls back to scientific display
+  }
+  if (ax === 0) {
+    const d = Math.min(n, 6);
+    return sign + padCells('0.' + '0'.repeat(d), 7) + expStr(0);
+  }
+  let [m, e] = sciParts(ax, n);
+  if (mode === 'ENG') {
+    const sh = ((e % 3) + 3) % 3;
+    let digits = m.replace('.', '');
+    while (digits.length < sh + 1) digits += '0';
+    m = digits.slice(0, sh + 1) + '.' + digits.slice(sh + 1);
+    e -= sh;
+  }
+  // at most 7 mantissa cells
+  let [mi, mf = ''] = m.split('.');
+  mf = mf.slice(0, Math.max(0, 7 - mi.length));
+  return sign + padCells(mi + '.' + mf, 7) + expStr(e);
+}
+
+// ---------- the calculator ----------
+class Calc {
+  constructor(saved) { this.reset(); if (saved) this.load(saved); }
+
+  reset() {
+    this.s = [0, 0, 0, 0]; this.lastx = 0; this.lift = true;
+    this.regs = new Array(20).fill(0); this.I = 0;
+    this.mode = 'FIX'; this.digits = 4; this.angle = 'DEG';
+    this.flags = new Array(10).fill(false);
+    this.program = []; this.pc = 0; this.rstack = [];
+    this.user = false; this.prgm = false; this.seed = 0.5;
+    this.shift = null; this.pfx = null; this.entry = null; this.onPending = false;
+    this.error = null; this.running = false; this.temp = null; this.toast = null;
+    this.sub = 0; this.subDone = false; this.pauseUntil = 0; this.solving = false; this.integrating = false;
+  }
+  save() {
+    return { s: this.s, lastx: this.lastx, lift: this.lift, regs: this.regs, I: this.I, mode: this.mode,
+      digits: this.digits, angle: this.angle, flags: this.flags, program: this.program, pc: this.pc,
+      user: this.user, seed: this.seed, v: 1 };
+  }
+  load(o) {
+    try {
+      if (!o || o.v !== 1) return;
+      for (const k of ['s', 'lastx', 'lift', 'regs', 'I', 'mode', 'digits', 'angle', 'flags', 'program', 'pc', 'user', 'seed'])
+        if (o[k] !== undefined) this[k] = o[k];
+      this.flags[9] = false;
+      if (this.pc > this.program.length) this.pc = 0;
+    } catch (e) { this.reset(); }
+  }
+
+  get x() { return this.s[0]; } set x(v) { this.s[0] = v; }
+  get y() { return this.s[1]; } set y(v) { this.s[1] = v; }
+
+  norm(v) {
+    if (Number.isNaN(v)) err(0);
+    if (!Number.isFinite(v) || Math.abs(v) > MAXV) { this.flags[9] = true; return v > 0 ? MAXV : -MAXV; }
+    if (Math.abs(v) < 1e-99) return 0;
+    return Number(v.toPrecision(10));
+  }
+  push(v) { this.s = [v, this.s[0], this.s[1], this.s[2]]; }
+  pushL(v) { if (this.lift) this.push(v); else this.s[0] = v; this.lift = true; }
+  drop(v) { this.s = [v, this.s[2], this.s[3], this.s[3]]; }
+  un(f) { const x = this.x; const r = this.norm(f(x)); this.lastx = x; this.x = r; this.lift = true; }
+  bin(f) { const x = this.x, y = this.y; const r = this.norm(f(y, x)); this.lastx = x; this.drop(r); this.lift = true; }
+
+  // angle helpers
+  toRadA(a) { return this.angle === 'DEG' ? a * Math.PI / 180 : this.angle === 'GRD' ? a * Math.PI / 200 : a; }
+  fromRadA(r) { return this.angle === 'DEG' ? r * 180 / Math.PI : this.angle === 'GRD' ? r * 200 / Math.PI : r; }
+  trig(kind, a) {
+    const full = this.angle === 'DEG' ? 360 : this.angle === 'GRD' ? 400 : 0;
+    if (full) {
+      const q = full / 4, r = ((a % full) + full) % full;
+      if (r % q === 0) { // exact quadrant values
+        const k = r / q, S = [0, 1, 0, -1], C = [1, 0, -1, 0];
+        if (kind === 'sin') return S[k];
+        if (kind === 'cos') return C[k];
+        if (C[k] === 0) { this.flags[9] = true; return S[k] * MAXV; }
+        return 0;
+      }
+      a = r;
+    }
+    return Math[kind](this.toRadA(a));
+  }
+
+  // ---------- registers ----------
+  regIndex(r) {
+    if (r === 'I') return 'I';
+    if (r === '(i)') { const n = Math.trunc(Math.abs(this.I)); if (n > 19) err(3); return n; }
+    return r;
+  }
+  getReg(r) { const i = this.regIndex(r); return i === 'I' ? this.I : this.regs[i]; }
+  setReg(r, v) { const i = this.regIndex(r); if (i === 'I') this.I = v; else this.regs[i] = v; }
+
+  // ---------- number entry ----------
+  entryValue() {
+    const e = this.entry; let m = e.m || '0';
+    let v = parseFloat(m);
+    if (e.e !== null) { const ex = parseInt(e.e || '0', 10) * (e.eneg ? -1 : 1); v = parseFloat(m + 'e' + ex); }
+    if (!Number.isFinite(v)) v = MAXV;
+    return e.neg ? -v : v;
+  }
+  startEntry(m) {
+    if (this.lift) this.push(0);
+    this.entry = { m, e: null, neg: false, eneg: false }; this.lift = true;
+  }
+  endEntry() { if (this.entry) { this.x = this.norm(this.entryValue()); this.entry = null; } }
+  digitKey(d) {
+    if (!this.entry) this.startEntry('');
+    const e = this.entry;
+    if (e.e !== null) e.e = (e.e + d).slice(-2);
+    else if (e.m.replace(/[^0-9]/g, '').length < 10) e.m = (e.m === '0' ? '' : e.m) + d;
+    this.x = this.entryValue();
+  }
+  dotKey() {
+    if (!this.entry) this.startEntry('0.');
+    else if (this.entry.e === null && !this.entry.m.includes('.')) this.entry.m = (this.entry.m || '0') + '.';
+    this.x = this.entryValue();
+  }
+  eexKey() {
+    if (!this.entry) this.startEntry('1');
+    if (this.entry.e === null) { if (!this.entry.m || /^0*\.?0*$/.test(this.entry.m)) this.entry.m = '1'; this.entry.e = ''; }
+    this.x = this.entryValue();
+  }
+  backKey() {
+    const e = this.entry;
+    if (!e) { this.x = 0; this.lift = false; return; }
+    if (e.e !== null) { if (e.e.length) e.e = e.e.slice(0, -1); else e.e = null; }
+    else e.m = e.m.slice(0, -1);
+    if (e.e === null && (e.m === '' || e.m === '0')) { this.entry = null; this.x = 0; this.lift = false; return; }
+    this.x = this.entryValue();
+  }
+
+  // ---------- key parsing ----------
+  press(k) {
+    this.toast = null;
+    if (this.running && !this.sub) { this.running = false; this.temp = null; this.pauseUntil = 0; return; }
+    if (this.error) { this.error = null; return; }
+    if (this.temp) this.temp = null;
+    if (this.flags[9] && k === '35') { this.flags[9] = false; return; }
+    if (this.onPending) {
+      this.onPending = false;
+      if (k === '30') { this.reset(); this.temp = 'Pr Error'; return; }
+    }
+    if (k === '41') { this.onPending = true; this.shift = null; this.pfx = null; return; }
+    if (k === '42' || k === '43') { this.shift = (this.shift === (k === '42' ? 'f' : 'g')) ? null : (k === '42' ? 'f' : 'g'); return; }
+    const sh = this.shift; this.shift = null;
+    try {
+      if (this.pfx) { if (this.operand(k, sh)) return; }
+      let op;
+      if (sh === 'f') op = FSHIFT[k];
+      else if (sh === 'g') op = GSHIFT[k];
+      else op = isDigit(k) ? 'digit' : UNSHIFT[k];
+      if (this.user && LBLKEYS[k] && sh !== 'g') op = sh === 'f' ? UNSHIFT[k] : FSHIFT[k];
+      if (!op) return;
+      const prefixCode = sh === 'f' ? '42' : sh === 'g' ? '43' : null;
+      const codes = prefixCode ? [prefixCode, k] : [k];
+      if (op[0] === '#') { this.pfx = { kind: op.slice(1), codes, dot: false, arith: null }; return; }
+      if (op.startsWith('gsb')) return this.dispatch({ op: 'GSB', a: op[3], c: ['32', Object.keys(LBLKEYS).find(c => LBLKEYS[c] === op[3])] });
+      this.dispatch({ op, a: isDigit(k) ? k : undefined, c: codes });
+    } catch (e) { this.fail(e); }
+  }
+
+  // Handle the operand of an open prefix; returns true if the key was consumed.
+  operand(k, sh) {
+    const p = this.pfx;
+    const finish = (op, a, extra) => { this.pfx = null; this.dispatch({ op, a, c: p.codes.concat(extra) }); return true; };
+    if ((sh === 'f' || !sh) && k === '35') { this.pfx = null; return true; } // CLEAR PREFIX or back arrow
+    if (sh) { this.pfx = null; return false; }
+    const kind = p.kind;
+    const regTarget = () => {
+      if (isDigit(k)) return p.dot ? [10 + +k, '.' + k] : [+k, k];
+      if (k === '25') return ['I', '25'];
+      if (k === '24') return ['(i)', '24'];
+      return null;
+    };
+    switch (kind) {
+      case 'STO': case 'RCL': case 'XCH': case 'DSE': case 'ISG': {
+        if (k === '48' && !p.dot) { p.dot = true; return true; }
+        if ((kind === 'STO' || kind === 'RCL') && ARITH[k] && !p.arith && !p.dot) { p.arith = ARITH[k]; p.codes = p.codes.concat(k); return true; }
+        if (kind === 'RCL' && k === '49' && !p.arith) return finish('rclSigma', undefined, k);
+        const t = regTarget();
+        if (t && !(p.dot && !isDigit(k))) return finish(kind, { r: t[0], op: p.arith }, t[1]);
+        break;
+      }
+      case 'FIX': case 'SCI': case 'ENG':
+        if (isDigit(k)) return finish('dispMode', { m: kind, n: +k }, k);
+        if (k === '25') return finish('dispMode', { m: kind, n: 'I' }, k);
+        break;
+      case 'LBL': case 'GTO': case 'GSB': case 'SOLVE': case 'INTEG': {
+        if (kind === 'GTO' && k === '16' && !p.dot) { p.kind = 'GTOL'; p.n = ''; return true; }
+        if (k === '48' && !p.dot) { p.dot = true; return true; }
+        if (isDigit(k)) return finish(kind, (p.dot ? '.' : '') + k, (p.dot ? '.' : '') + k);
+        if (!p.dot && LBLKEYS[k]) return finish(kind, LBLKEYS[k], k);
+        if (!p.dot && k === '25' && (kind === 'GTO' || kind === 'GSB')) return finish(kind, 'I', k);
+        break;
+      }
+      case 'GTOL':
+        if (isDigit(k)) {
+          p.n += k;
+          if (p.n.length === 3) { this.pfx = null; this.dispatch({ op: 'GTOL', a: +p.n, c: [] }); }
+          return true;
+        }
+        break;
+      case 'SF': case 'CF': case 'FQ': case 'TEST':
+        if (isDigit(k)) return finish(kind, +k, k);
+        break;
+      case 'HYP': case 'AHYP':
+        if (k === '23' || k === '24' || k === '25') return finish(kind, { '23': 'sin', '24': 'cos', '25': 'tan' }[k], k);
+        break;
+    }
+    this.pfx = null; // invalid operand: cancel prefix and treat the key afresh
+    return false;
+  }
+
+  dispatch(ins) {
+    if (this.prgm && !NONPROG.has(ins.op) && !(ins.op === 'back')) {
+      if (this.program.length >= MAXLINES) err(10);
+      this.program.splice(this.pc, 0, ins); this.pc++;
+      return;
+    }
+    if (this.prgm && ins.op === 'back') { if (this.pc > 0) { this.program.splice(this.pc - 1, 1); this.pc--; } return; }
+    this.exec(ins, false);
+  }
+
+  fail(e) {
+    if (!(e instanceof CalcError)) { console.error(e); e = new CalcError(0); }
+    this.error = e.message; this.entry = null; this.running = false; this.pfx = null;
+    if (!this.sub) this.rstack = [];
+  }
+
+  // ---------- labels & program control ----------
+  findLabel(l) {
+    if (l === 'I') {
+      const v = Math.trunc(this.I);
+      if (this.I < 0) { const line = Math.trunc(-this.I); if (line > this.program.length) err(4); return { line }; }
+      if (v <= 9) l = String(v); else if (v <= 19) l = '.' + (v - 10); else if (v <= 24) l = 'ABCDE'[v - 20]; else err(4);
+    }
+    const n = this.program.length;
+    for (let i = 0; i < n; i++) {
+      const j = (this.pc + i) % n;
+      const p = this.program[j];
+      if (p.op === 'LBL' && p.a === l) return { line: j + 1 };
+    }
+    err(4);
+  }
+  skip() { this.pc = this.pc >= this.program.length ? 0 : this.pc + 1; }
+
+  step() { // executes one program line
+    if (this.pc >= this.program.length) { this.exec({ op: 'rtn' }, true); return; }
+    const ins = this.program[this.pc]; this.pc++;
+    this.exec(ins, true);
+  }
+  run(budgetSteps = 4000, now = 0) { // async-style run in chunks; returns true while still running
+    try {
+      for (let i = 0; i < budgetSteps && this.running; i++) {
+        if (this.pauseUntil > 0 && now < this.pauseUntil) return true;
+        if (this.pauseUntil > 0) this.pauseUntil = 0;
+        this.step();
+        if (this.pauseUntil === -1) { this.endEntry(); this.pauseUntil = now + 1000; return this.running; }
+      }
+    } catch (e) { this.fail(e); }
+    if (!this.running) { this.endEntry(); this.pauseUntil = 0; }
+    return this.running;
+  }
+  startRun(line) { this.pc = line; this.running = true; this.rstack = []; }
+
+  // run the subroutine at label with x filled into the stack; returns resulting x (synchronous)
+  evalAt(label, line, v) {
+    this.s = [v, v, v, v]; this.lift = true;
+    const save = { pc: this.pc, rstack: this.rstack, running: this.running };
+    this.pc = line; this.rstack = []; this.running = true; this.sub++; this.subDone = false;
+    let n = 0;
+    try {
+      while (!this.subDone) {
+        if (++n > 500000) err(0);
+        if (!this.running) err(0); // R/S inside the function
+        this.step();
+      }
+      this.endEntry();
+    } finally {
+      this.sub--; this.subDone = false;
+      this.pc = save.pc; this.rstack = save.rstack; this.running = save.running;
+    }
+    return this.x;
+  }
+
+  solve(label) {
+    if (this.solving) err(7);
+    const { line } = this.findLabel(label);
+    let a = this.y, b = this.x;
+    const t0 = this.s[2], t1 = this.s[3];
+    this.solving = true;
+    try {
+      const f = v => this.evalAt(label, line, this.norm(v));
+      if (a === b) b = a === 0 ? 1e-6 : a * (1 + 1e-6);
+      let fa = f(a), fb = f(b);
+      let done = null;
+      for (let it = 0; it < 120 && !done; it++) {
+        if (fb === 0) { done = [b, a, fb]; break; }
+        if (fa === 0) { done = [a, b, fa]; break; }
+        if (Math.sign(fa) !== Math.sign(fb)) { // bracketed: Illinois method
+          for (let j = 0; j < 200; j++) {
+            let c = b - fb * (b - a) / (fb - fa);
+            if (!(c > Math.min(a, b) && c < Math.max(a, b))) c = (a + b) / 2;
+            c = this.norm(c);
+            if (c === a || c === b) { done = Math.abs(fa) < Math.abs(fb) ? [a, b, fa] : [b, a, fb]; break; }
+            const fc = f(c);
+            if (fc === 0) { done = [c, b, 0]; break; }
+            if (Math.sign(fc) !== Math.sign(fb)) { a = b; fa = fb; } else fa /= 2;
+            b = c; fb = fc;
+            if (Math.abs(b - a) <= 1e-10 * Math.max(Math.abs(b), 1e-90)) { done = Math.abs(fa) < Math.abs(fb) ? [a, b, fa] : [b, a, fb]; break; }
+          }
+          if (!done) done = [b, a, fb];
+          break;
+        }
+        // not bracketed: secant step, with expansion if flat
+        let c;
+        if (fb === fa) c = b + (b - a) * 8;
+        else {
+          c = b - fb * (b - a) / (fb - fa);
+          const lim = 100 * Math.abs(b - a) + 1e-6 * Math.abs(b);
+          if (Math.abs(c - b) > lim) c = b + Math.sign(c - b) * lim;
+        }
+        c = this.norm(c);
+        if (Math.abs(c) >= MAXV || c === b) err(8);
+        const fc = f(c);
+        if (Math.abs(fc) > Math.abs(fb) && Math.sign(fc) === Math.sign(fb)) {
+          // moving away from the minimum: keep the better point and try the other side
+          a = c; fa = fc;
+        } else { a = b; fa = fb; b = c; fb = fc; }
+      }
+      if (!done) err(8);
+      this.s = [this.norm(done[0]), this.norm(done[1]), this.norm(done[2]), t0];
+      void t1;
+    } finally { this.solving = false; }
+    this.lift = true;
+  }
+
+  integrate(label) {
+    if (this.integrating) err(7);
+    const { line } = this.findLabel(label);
+    const lo = this.y, hi = this.x;
+    this.integrating = true;
+    let res, unc;
+    try {
+      const f = v => this.evalAt(label, line, this.norm(v));
+      const mid = (lo + hi) / 2, half = (hi - lo) / 2;
+      // substitution x = mid + half*(3u-u^3)/2, dx = half*1.5*(1-u^2) du on u in [-1,1]
+      const g = u => { const w = 1.5 * (1 - u * u); return w === 0 ? 0 : f(mid + half * (3 * u - u * u * u) / 2) * w * half; };
+      const tolFor = v => {
+        const n = this.digits;
+        if (this.mode === 'FIX') return 0.5 * Math.pow(10, -n);
+        return 0.5 * Math.pow(10, -n) * Math.max(Math.abs(v), 1e-99);
+      };
+      if (lo === hi) { res = 0; unc = 0; }
+      else {
+        // Romberg on the trapezoid rule; the endpoints carry zero weight so they are never evaluated
+        const R = [[0]];
+        for (let k = 1; k < 12; k++) {
+          const n = 1 << k, h = 2 / n; let sum = 0;
+          for (let i = 1; i < n; i += 2) sum += g(-1 + i * h);
+          const T = R[k - 1][0] / 2 + h * sum;
+          R[k] = [T];
+          for (let j = 1; j <= k; j++) R[k][j] = R[k][j - 1] + (R[k][j - 1] - R[k - 1][j - 1]) / (Math.pow(4, j) - 1);
+          const est = R[k][k], prev = R[k - 1][k - 1];
+          unc = Math.abs(est - prev);
+          res = est;
+          if (k >= 3 && unc <= tolFor(est)) break;
+        }
+      }
+    } finally { this.integrating = false; }
+    this.s = [this.norm(res), this.norm(Math.max(unc, 0)), hi, lo];
+    this.lift = true;
+  }
+
+  // ---------- execution ----------
+  exec(ins, inProg) {
+    const op = ins.op, a = ins.a;
+    const entryOps = op === 'digit' || op === 'dot' || op === 'eex' || (op === 'chs' && this.entry) || (op === 'back' && this.entry);
+    if (!entryOps) this.endEntry();
+    const S = this;
+    switch (op) {
+      case 'digit': return this.digitKey(a);
+      case 'dot': return this.dotKey();
+      case 'eex': return this.eexKey();
+      case 'back': return this.backKey();
+      case 'chs':
+        if (this.entry) {
+          if (this.entry.e !== null) this.entry.eneg = !this.entry.eneg; else this.entry.neg = !this.entry.neg;
+          this.x = this.entryValue();
+        } else this.x = -this.x;
+        return;
+      case 'enter': this.push(this.x); this.lift = false; return;
+      case 'clx': this.x = 0; this.lift = false; return;
+      case 'lstx': return this.pushL(this.lastx);
+      case 'pi': return this.pushL(PI10);
+      case 'rdn': this.s = [this.s[1], this.s[2], this.s[3], this.s[0]]; this.lift = true; return;
+      case 'rup': this.s = [this.s[3], this.s[0], this.s[1], this.s[2]]; this.lift = true; return;
+      case 'swap': this.s = [this.s[1], this.s[0], this.s[2], this.s[3]]; this.lift = true; return;
+      case 'add': return this.bin((y, x) => y + x);
+      case 'sub': return this.bin((y, x) => y - x);
+      case 'mul': return this.bin((y, x) => y * x);
+      case 'div': return this.bin((y, x) => { if (x === 0) err(0); return y / x; });
+      case 'ypx': return this.bin((y, x) => {
+        if (y === 0 && x <= 0) err(0);
+        if (y < 0 && !isInt(x)) err(0);
+        return Math.pow(y, x);
+      });
+      case 'sqrt': return this.un(x => { if (x < 0) err(0); return Math.sqrt(x); });
+      case 'sq': return this.un(x => x * x);
+      case 'exp': return this.un(Math.exp);
+      case 'ln': return this.un(x => { if (x <= 0) err(0); return Math.log(x); });
+      case 'p10': return this.un(x => Math.pow(10, x));
+      case 'log': return this.un(x => { if (x <= 0) err(0); return Math.log10(x); });
+      case 'inv': return this.un(x => { if (x === 0) err(0); return 1 / x; });
+      case 'abs': return this.un(Math.abs);
+      case 'pct': { const x = this.x; this.x = this.norm(this.y * x / 100); this.lastx = x; this.lift = true; return; }
+      case 'dpct': { const x = this.x; if (this.y === 0) err(0); this.x = this.norm((x - this.y) / this.y * 100); this.lastx = x; this.lift = true; return; }
+      case 'sin': case 'cos': case 'tan': return this.un(x => this.trig(op, x));
+      case 'asin': return this.un(x => { if (Math.abs(x) > 1) err(0); return this.fromRadA(Math.asin(x)); });
+      case 'acos': return this.un(x => { if (Math.abs(x) > 1) err(0); return this.fromRadA(Math.acos(x)); });
+      case 'atan': return this.un(x => this.fromRadA(Math.atan(x)));
+      case 'HYP': return this.un(x => Math[a + 'h'](x));
+      case 'AHYP': return this.un(x => {
+        if (a === 'cos' && x < 1) err(0);
+        if (a === 'tan' && Math.abs(x) >= 1) err(0);
+        return Math['a' + a + 'h'](x);
+      });
+      case 'deg': case 'rad': case 'grd': this.angle = op.toUpperCase(); return;
+      case 'toRad': return this.un(x => x * Math.PI / 180);
+      case 'toDeg': return this.un(x => x * 180 / Math.PI);
+      case 'toP': {
+        const x = this.x, y = this.y;
+        const r = Math.hypot(x, y), t = this.fromRadA(Math.atan2(y, x));
+        this.lastx = x; this.s[0] = this.norm(r); this.s[1] = this.norm(t); this.lift = true; return;
+      }
+      case 'toR': {
+        const r = this.x, t = this.y;
+        const c = this.trig('cos', t), s = this.trig('sin', t);
+        this.lastx = r; this.s[0] = this.norm(r * c); this.s[1] = this.norm(r * s); this.lift = true; return;
+      }
+      case 'toHMS': return this.un(x => {
+        const sg = x < 0 ? -1 : 1; let h = Math.abs(x);
+        let H = Math.floor(h), mm = (h - H) * 60, M = Math.floor(mm + 1e-9), sec = (mm - M) * 60;
+        sec = Math.round(sec * 1e6) / 1e6;
+        if (sec >= 60) { sec -= 60; M++; } if (M >= 60) { M -= 60; H++; }
+        return sg * (H + M / 100 + sec / 10000);
+      });
+      case 'toH': return this.un(x => {
+        const sg = x < 0 ? -1 : 1; const v = Math.abs(x);
+        const H = Math.floor(v), rest = Math.round((v - H) * 1e10) / 1e8, M = Math.floor(rest + 1e-9), sec = (rest - M) * 100;
+        return sg * (H + M / 60 + sec / 3600);
+      });
+      case 'frac': return this.un(x => x - Math.trunc(x));
+      case 'int': return this.un(x => Math.trunc(x));
+      case 'rnd': return this.un(x => this.roundToDisplay(x));
+      case 'fact': return this.un(x => {
+        if (isInt(x)) { if (x < 0) err(0); if (x > 69) { this.flags[9] = true; return MAXV; } return fact(x); }
+        return gamma(x + 1);
+      });
+      case 'pyx': case 'cyx': return this.bin((y, x) => {
+        if (!isInt(x) || !isInt(y) || x < 0 || y < 0 || x > y) err(0);
+        let r = 1; for (let i = 0; i < x; i++) r *= (y - i);
+        return op === 'pyx' ? r : r / fact(x);
+      });
+      case 'ran': this.seed = (this.seed * 9821 + 0.211327) % 1; return this.pushL(Number(this.seed.toFixed(10)));
+      case 'splus': case 'sminus': {
+        const k = op === 'splus' ? 1 : -1, x = this.x, y = this.y, R = this.regs;
+        R[2] = this.norm(R[2] + k); R[3] = this.norm(R[3] + k * x); R[4] = this.norm(R[4] + k * x * x);
+        R[5] = this.norm(R[5] + k * y); R[6] = this.norm(R[6] + k * y * y); R[7] = this.norm(R[7] + k * x * y);
+        this.lastx = x; this.x = R[2]; this.lift = false; return;
+      }
+      case 'mean': case 'sdev': case 'lr': {
+        const [n, sx, sx2, sy, sy2, sxy] = this.regs.slice(2, 8);
+        let vx, vy;
+        if (op === 'mean') { if (n === 0) err(2); vx = sx / n; vy = sy / n; }
+        else if (op === 'sdev') {
+          if (n <= 1) err(2);
+          const dx = n * sx2 - sx * sx, dy = n * sy2 - sy * sy;
+          if (dx < 0 || dy < 0) err(2);
+          vx = Math.sqrt(dx / (n * (n - 1))); vy = Math.sqrt(dy / (n * (n - 1)));
+        } else {
+          if (n <= 1) err(2);
+          const D = n * sx2 - sx * sx; if (D === 0) err(2);
+          const A = (n * sxy - sx * sy) / D; vy = A; vx = (sy - A * sx) / n;
+        }
+        if (this.lift) this.push(this.norm(vy)); else this.x = this.norm(vy);
+        this.push(this.norm(vx)); this.lift = true; return;
+      }
+      case 'yr': {
+        const [n, sx, sx2, sy, sy2, sxy] = this.regs.slice(2, 8);
+        if (n <= 1) err(2);
+        const D = n * sx2 - sx * sx, E = n * sy2 - sy * sy; if (D === 0 || D * E <= 0) err(2);
+        const A = (n * sxy - sx * sy) / D, B = (sy - A * sx) / n;
+        const r = (n * sxy - sx * sy) / Math.sqrt(D * E);
+        const x = this.x; this.lastx = x; this.x = this.norm(r); this.push(this.norm(A * x + B)); this.lift = true; return;
+      }
+      case 'clrSigma': for (let i = 2; i <= 7; i++) this.regs[i] = 0; this.s = [0, 0, 0, 0]; return;
+      case 'clrReg': this.regs.fill(0); this.I = 0; return;
+      case 'clrPrefix': {
+        const ax = Math.abs(this.x);
+        this.temp = ' ' + (ax === 0 ? '0'.repeat(10) : ax.toExponential(9).split('e')[0].replace('.', ''));
+        return;
+      }
+      case 'STO': {
+        const { r, op: ar } = a; let v = this.x;
+        if (ar) { const c = this.getReg(r); v = ar === '+' ? c + v : ar === '-' ? c - v : ar === '*' ? c * v : (v === 0 ? err(0) : c / v); }
+        this.setReg(r, this.norm(v)); this.lift = true; return;
+      }
+      case 'RCL': {
+        const { r, op: ar } = a; const c = this.getReg(r);
+        if (!ar) return this.pushL(c);
+        const x = this.x; let v = ar === '+' ? x + c : ar === '-' ? x - c : ar === '*' ? x * c : (c === 0 ? err(0) : x / c);
+        this.lastx = x; this.x = this.norm(v); this.lift = true; return;
+      }
+      case 'rclSigma': if (this.lift) this.push(this.regs[5]); else this.x = this.regs[5]; this.push(this.regs[3]); this.lift = true; return;
+      case 'XCH': { const c = this.getReg(a.r); this.setReg(a.r, this.x); this.x = c; this.lift = true; return; }
+      case 'DSE': case 'ISG': {
+        const v = this.getReg(a.r), sg = v < 0 ? -1 : 1, av = Math.abs(v);
+        let n = sg * Math.trunc(av);
+        const fr = Math.round((av - Math.trunc(av)) * 1e5);
+        const goal = Math.trunc(fr / 100); let inc = fr % 100; if (inc === 0) inc = 1;
+        n = op === 'DSE' ? n - inc : n + inc;
+        const nv = n + Math.sign(n || 1) * fr / 1e5;
+        this.setReg(a.r, this.norm(n === 0 ? fr / 1e5 : nv));
+        const skipNext = op === 'DSE' ? n <= goal : n > goal;
+        if (skipNext && inProg) this.skip();
+        this.lift = true; return;
+      }
+      case 'dispMode': {
+        let n = a.n === 'I' ? Math.trunc(Math.abs(this.I)) : a.n; if (n > 9) n = 9;
+        this.mode = a.m; this.digits = n; return;
+      }
+      case 'SF': case 'CF':
+        if (a === 8 && op === 'SF') { this.toast = 'Complex mode arrives in the next version'; return; }
+        this.flags[a] = op === 'SF'; return;
+      case 'FQ': if (!this.flags[a] && inProg) this.skip(); return;
+      case 'TEST': case 'xley': case 'xeq0': {
+        const x = this.x, y = this.y;
+        const t = op === 'xley' ? x <= y : op === 'xeq0' ? x === 0 :
+          [x !== 0, x > 0, x < 0, x >= 0, x <= 0, x === y, x !== y, x > y, x < y, x >= y][a];
+        if (!t && inProg) this.skip();
+        this.lift = true; return;
+      }
+      case 'LBL': return;
+      case 'GTO': {
+        const { line } = this.findLabel(a); this.pc = line; return;
+      }
+      case 'GTOL': if (a > this.program.length) err(4); this.pc = a; return;
+      case 'GSB': {
+        const { line } = this.findLabel(a);
+        if (inProg) { if (this.rstack.length >= 7) err(5); this.rstack.push(this.pc); this.pc = line; }
+        else this.startRun(line);
+        return;
+      }
+      case 'rtn':
+        if (inProg) {
+          if (this.rstack.length) this.pc = this.rstack.pop();
+          else if (this.sub) this.subDone = true;
+          else { this.running = false; this.pc = 0; }
+        } else this.pc = 0;
+        return;
+      case 'rs':
+        if (inProg) { if (this.sub) err(0); this.running = false; }
+        else { this.running = true; this.rstack = []; }
+        return;
+      case 'pse': if (inProg && !this.sub) { this.pauseUntil = -1; this.temp = null; } return;
+      case 'SOLVE': return this.solve(a);
+      case 'INTEG': return this.integrate(a);
+      case 'PR': this.prgm = !this.prgm; this.entry = null; return;
+      case 'clrPrgm': if (this.prgm) { this.program = []; } this.pc = 0; this.rstack = []; return;
+      case 'SST':
+        if (this.prgm) { this.pc = this.pc >= this.program.length ? 0 : this.pc + 1; return; }
+        if (this.program.length === 0) return;
+        if (this.pc >= this.program.length) this.pc = 0;
+        this.temp = this.lineText(this.pc + 1);
+        this.running = true;
+        try { this.step(); this.endEntry(); } finally { this.running = false; }
+        return;
+      case 'BST':
+        this.pc = this.pc <= 0 ? this.program.length : this.pc - 1;
+        if (!this.prgm) { this.temp = this.lineText(this.pc); }
+        return;
+      case 'user': this.user = !this.user; return;
+      case 'MEM': this.toast = `Program uses ${this.program.length} of ${MAXLINES} lines`; return;
+      case 'nyiMatrix': this.toast = 'Matrix functions arrive in the next version'; return;
+      case 'nyiComplex': this.toast = 'Complex functions arrive in the next version'; return;
+    }
+    void S;
+  }
+
+  roundToDisplay(x) {
+    if (x === 0) return 0;
+    const n = this.digits, ax = Math.abs(x);
+    if (this.mode === 'FIX') {
+      const ip = Math.floor(ax).toString().length;
+      const dec = Math.max(0, Math.min(n, 10 - ip));
+      const r = Number(x.toFixed(dec));
+      if (ax < 1e10 && r !== 0) return r;
+    }
+    return Number(x.toExponential(Math.min(n, 9)));
+  }
+
+  // ---------- display ----------
+  lineText(line) {
+    const num = String(line).padStart(3, '0') + '-';
+    if (line === 0 || !this.program[line - 1]) return ' ' + num + '      ';
+    const c = this.program[line - 1].c.map(s => s.length === 1 ? ' ' + s : s);
+    const body = c.join(c.length === 3 ? ',' : ' ');
+    return ' ' + num + padCells(body.replace(/^ /, ''), 6, true);
+  }
+  entryText() {
+    const e = this.entry; const sign = e.neg ? '-' : ' ';
+    let m = e.m || '0';
+    let [i, f] = m.split('.');
+    i = group(i || '0');
+    let ms = f !== undefined ? i + '.' + f : i;
+    if (e.e === null) return sign + padCells(ms, 10);
+    ms = padCells(ms, 7);
+    if (cellLen(ms) > 7) ms = ms.slice(0, 7);
+    return sign + ms + (e.eneg ? '-' : ' ') + (e.e || '').padStart(2, '0');
+  }
+  displayText() {
+    if (this.error) return ' ' + padCells(this.error, 10);
+    if (this.running && !this.pauseUntil) return ' ' + padCells('running', 10);
+    if (this.temp) return this.temp.length && this.temp[0] !== ' ' && this.temp[0] !== '-' ? ' ' + padCells(this.temp, 10) : padCells(this.temp, 11);
+    if (this.prgm) return this.lineText(this.pc);
+    if (this.entry) return this.entryText();
+    return formatX(this.x, this.mode, this.digits);
+  }
+  annunciators() {
+    return { user: this.user, f: this.shift === 'f', g: this.shift === 'g',
+      rad: this.angle !== 'DEG', grd: this.angle === 'GRD', c: this.flags[8], prgm: this.prgm, blink: this.flags[9] };
+  }
+}
+
+return { Calc, CalcError, formatX };
+})();
+if (typeof module !== 'undefined') module.exports = HP15;
+
+</script>
+<script>
+{
+const KEYS = [
+  ['11','√x','A','x<sup>2</sup>'],['12','e<sup>x</sup>','B','LN'],['13','10<sup>x</sup>','C','LOG'],['14','y<sup>x</sup>','D','%'],['15','1/x','E','Δ%'],
+  ['16','CHS','MATRIX','ABS'],['7','7','FIX','DEG'],['8','8','SCI','RAD'],['9','9','ENG','GRD'],['10','÷','SOLVE','x≤y'],
+  ['21','SST','LBL','BST'],['22','GTO','HYP','HYP<sup>−1</sup>'],['23','SIN','DIM','SIN<sup>−1</sup>'],['24','COS','(i)','COS<sup>−1</sup>'],['25','TAN','I','TAN<sup>−1</sup>'],
+  ['26','EEX','RESULT','π'],['4','4','x≷','SF'],['5','5','DSE','CF'],['6','6','ISG','F?'],['20','×','∫<sub>x</sub><sup>y</sup>','x=0'],
+  ['31','R/S','PSE','P/R'],['32','GSB','Σ','RTN'],['33','R↓','PRGM','R↑'],['34','x≷y','REG','RND'],['35','←','PREFIX','CL x'],
+  ['36','ENTER','RAN #','LST x'],['1','1','→R','→P'],['2','2','→H.MS','→H'],['3','3','→RAD','→DEG'],['30','−','Re≷Im','TEST'],
+  ['41','ON','',''],['42','f','',''],['43','g','',''],['44','STO','FRAC','INT'],['45','RCL','USER','MEM'],
+  ['0','0','x!','x̄'],['48','·','ŷ,r','s'],['49','Σ+','L.R.','Σ−'],['40','+','P<sub>y,x</sub>','C<sub>y,x</sub>']
+];
+const pad = document.getElementById('pad');
+pad.innerHTML = KEYS.map(([c, m, f, g]) => {
+  const cls = c === '42' ? 'kf' : c === '43' ? 'kg' : c === '36' ? 'ent' : /^\d$/.test(c) ? 'dg' : (m.length > 3 ? 'sm' : '');
+  const main = c === '36' ? [...'ENTER'].map(ch => `<span>${ch}</span>`).join('') : m;
+  return `<div class="cell${c === '36' ? ' enter' : ''}"><div class="fl">${f}</div>` +
+    `<div class="key ${cls}" data-k="${c}" role="button" aria-label="${m.replace(/<[^>]+>/g, '')}"><div class="tp">${main}</div><div class="fr">${g}</div></div></div>`;
+}).join('') + '<div class="clear"><span>CLEAR</span></div>';
+
+// ----- LCD -----
+const lcd = document.getElementById('lcd');
+const SEGS = { '0':'abcdef','1':'bc','2':'abged','3':'abgcd','4':'fgbc','5':'afgcd','6':'afgedc','7':'abc','8':'abcdefg','9':'abcdfg',
+  '-':'g',' ':'','E':'afged','r':'eg','o':'cdeg','P':'abefg','u':'cde','n':'ceg','i':'c','g':'abcdfg','C':'adef','c':'deg',
+  'L':'def','b':'cdefg','d':'bcdeg','A':'abcefg','F':'aefg','H':'bcefg','h':'cefg','t':'defg','y':'bcdfg','U':'bcdef','R':'eg' };
+const CW = 51, X0 = 22, Y0 = 14, W = 30, H = 52, T = 6.5, G = 1.6;
+function hseg(x1, x2, y) { const t = T / 2; return `${x1},${y} ${x1 + t},${y - t} ${x2 - t},${y - t} ${x2},${y} ${x2 - t},${y + t} ${x1 + t},${y + t}`; }
+function vseg(x, y1, y2) { const t = T / 2; return `${x},${y1} ${x + t},${y1 + t} ${x + t},${y2 - t} ${x},${y2} ${x - t},${y2 - t} ${x - t},${y1 + t}`; }
+let svg = '<g class="digits" transform="skewX(-7) translate(8 0)">';
+for (let i = 0; i < 11; i++) {
+  const x = X0 + i * CW, y = Y0, m = y + H / 2, b = y + H;
+  const P = { a: hseg(x + G, x + W - G, y), g: hseg(x + G, x + W - G, m), d: hseg(x + G, x + W - G, b),
+    f: vseg(x, y + G, m - G), b: vseg(x + W, y + G, m - G), e: vseg(x, m + G, b - G), c: vseg(x + W, m + G, b - G) };
+  for (const s in P) svg += `<polygon class="seg" id="s${i}${s}" points="${P[s]}"/>`;
+  svg += `<rect class="seg" id="s${i}p" x="${x + W + 6}" y="${b - 3.5}" width="6.5" height="6.5" rx="1"/>`;
+  svg += `<path class="seg" id="s${i}m" d="M${x + W + 7} ${b + 3.5} l5 0 l-5 9 l-3 0 z"/>`;
+}
+svg += '</g>';
+const ANN = [['user', 'USER', 60], ['f', 'f', 160], ['g', 'g', 190], ['grd', 'G', 330], ['rad', 'RAD', 344], ['c', 'C', 470], ['prgm', 'PRGM', 530]];
+svg += ANN.map(([id, t, x]) => `<text class="ann" id="a_${id}" x="${x}" y="92">${t}</text>`).join('');
+lcd.innerHTML = svg;
+const segEls = [];
+for (let i = 0; i < 11; i++) { const o = {}; for (const s of 'abcdefgpm') o[s] = document.getElementById('s' + i + s); segEls.push(o); }
+
+function cells(str) {
+  const out = [];
+  for (const ch of str) {
+    if (ch === '.' || ch === ',') { if (!out.length) out.push({ ch: ' ' }); out[out.length - 1][ch === '.' ? 'p' : 'm'] = true; }
+    else out.push({ ch });
+  }
+  while (out.length < 11) out.push({ ch: ' ' });
+  return out.slice(0, 11);
+}
+
+// ----- state -----
+const KEY = 'rpn15.v1';
+let saved = null;
+try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+const calc = new HP15.Calc(saved);
+const calcEl = document.getElementById('calc');
+const toastEl = document.getElementById('toast');
+let toastTimer = 0, lastText = '';
+
+function render() {
+  const text = calc.displayText();
+  if (text !== lastText) {
+    lastText = text;
+    const cs = cells(text);
+    cs.forEach((c, i) => {
+      const on = SEGS[c.ch] ?? '';
+      const e = segEls[i];
+      for (const s of 'abcdefg') e[s].classList.toggle('on', on.includes(s));
+      e.p.classList.toggle('on', !!(c.p || c.m)); e.m.classList.toggle('on', !!c.m);
+    });
+    lcd.setAttribute('aria-label', text.trim());
+  }
+  const a = calc.annunciators();
+  for (const [id] of ANN) document.getElementById('a_' + id).classList.toggle('on', !!a[id]);
+  lcd.classList.toggle('blink', !!a.blink || (calc.running && !calc.pauseUntil));
+  if (calc.toast) {
+    toastEl.textContent = calc.toast; toastEl.classList.add('on'); calc.toast = null;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('on'), 2600);
+  }
+}
+let saveTimer = 0;
+function persist() { clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(calc.save())); } catch (e) {} }, 150); }
+
+function loop() {
+  if (!calc.running) { render(); persist(); return; }
+  calc.run(2500, performance.now());
+  render();
+  requestAnimationFrame(loop);
+}
+
+let holdTemp = false, holdSince = 0;
+function press(code) {
+  const wasRunning = calc.running;
+  calc.press(code);
+  holdTemp = !!calc.temp && calc.temp !== 'Pr Error';
+  holdSince = performance.now();
+  render(); persist();
+  if (calc.running && !wasRunning) requestAnimationFrame(loop);
+}
+function release() {
+  if (!holdTemp) return;
+  holdTemp = false;
+  const wait = Math.max(0, 450 - (performance.now() - holdSince));
+  setTimeout(() => { if (calc.temp && calc.temp !== 'Pr Error') { calc.temp = null; render(); } }, wait);
+}
+
+// ----- touch -----
+const keyEls = {};
+for (const el of pad.querySelectorAll('.key')) {
+  keyEls[el.dataset.k] = el;
+  el.addEventListener('pointerdown', ev => {
+    ev.preventDefault();
+    el.classList.add('down');
+    try { navigator.vibrate && navigator.vibrate(8); } catch (e) {}
+    press(el.dataset.k);
+  });
+  const up = () => { el.classList.remove('down'); release(); };
+  el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('pointerleave', up);
+}
+calcEl.addEventListener('contextmenu', e => e.preventDefault());
+
+// ----- keyboard -----
+const KB = { 'Enter': '36', 'Backspace': '35', '+': '40', '-': '30', '*': '20', '/': '10', '.': '48', ',': '48',
+  'f': '42', 'g': '43', 's': '44', 'r': '45', 'x': '34', 'd': '33', 'c': '16', 'e': '26', 'q': '11' };
+document.addEventListener('keydown', ev => {
+  if (help.classList.contains('on')) { if (ev.key === 'Escape') closeHelp(); return; }
+  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  const k = /^[0-9]$/.test(ev.key) ? ev.key : KB[ev.key];
+  if (!k) return;
+  ev.preventDefault();
+  if (ev.repeat) return;
+  keyEls[k] && keyEls[k].classList.add('down');
+  press(k);
+});
+document.addEventListener('keyup', ev => {
+  const k = /^[0-9]$/.test(ev.key) ? ev.key : KB[ev.key];
+  if (k && keyEls[k]) keyEls[k].classList.remove('down');
+  release();
+});
+
+// ----- help -----
+const help = document.getElementById('help');
+function closeHelp() { help.classList.remove('on'); }
+document.getElementById('info').addEventListener('pointerdown', e => { e.stopPropagation(); help.classList.add('on'); });
+document.getElementById('closeHelp').addEventListener('click', closeHelp);
+help.addEventListener('click', e => { if (e.target === help) closeHelp(); });
+
+// ----- fit to screen -----
+function fit() {
+  const vw = innerWidth, vh = innerHeight;
+  const rot = vh > vw * 1.1 && vw < 640;
+  const w = rot ? vh : vw, h = rot ? vw : vh;
+  const s = Math.min(w / 1000, h / 560) * 0.97;
+  calcEl.style.transform = `translate(-50%,-50%) rotate(${rot ? 90 : 0}deg) scale(${s})`;
+}
+addEventListener('resize', fit); addEventListener('orientationchange', fit);
+fit(); render();
+if (calc.running) requestAnimationFrame(loop);
+
+try { if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
+}
+</script>
+</body>
+</html>
