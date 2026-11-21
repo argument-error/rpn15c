@@ -31,7 +31,7 @@ html,body{margin:0;height:100%;background:radial-gradient(120% 90% at 50% 40%,#2
 .glass{width:100%;height:100%;border-radius:4px;background:linear-gradient(#b3b8a1,var(--lcd));box-shadow:inset 0 3px 8px #0006}
 .glass svg{width:100%;height:100%;display:block}
 .seg{fill:var(--seg);opacity:.045}.seg.on{opacity:.92}
-.ann{font:600 13px 'Archivo Narrow',sans-serif;fill:var(--seg);opacity:0}.ann.on{opacity:.9}
+.ann{font:700 16px 'Archivo Narrow',sans-serif;fill:var(--seg);opacity:0}.ann.on{opacity:.9}
 .blink .digits{animation:bl .5s steps(1) infinite}@keyframes bl{50%{opacity:.15}}
 .brand{flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:6px;color:#2d2b28;position:relative;height:118px;justify-content:center}
 .brand b{font:700 44px/1 'Archivo Narrow',sans-serif;letter-spacing:.02em;font-style:italic}
@@ -116,15 +116,33 @@ button:focus-visible,.key:focus-visible{outline:3px solid #fff;outline-offset:2p
       <li>Put two guesses in Y and X, then <kbd class="f">f</kbd> <kbd>SOLVE</kbd> <kbd>A</kbd>. You get the root in X, the previous estimate in Y and f(root) in Z; Error 8 means no root was found.</li>
       <li>Put the limits in Y and X, then <kbd class="f">f</kbd> <kbd>∫</kbd> <kbd>A</kbd>. You get the integral in X and its uncertainty in Y. The display setting controls accuracy (FIX 4 is good to about 0.00005).</li>
     </ul>
+    <h3>Complex numbers</h3>
+    <ul>
+      <li><kbd>3</kbd> <kbd>ENTER</kbd> <kbd>4</kbd> <kbd class="f">f</kbd> <kbd>I</kbd> makes 3 + 4i and lights <b>C</b>. The display shows the real part; hold <kbd class="f">f</kbd> <kbd>(i)</kbd> to see the imaginary part.</li>
+      <li><kbd class="f">f</kbd> <kbd>Re≷Im</kbd> swaps the parts. <kbd>CLx</kbd>, <kbd>←</kbd>, <kbd>CHS</kbd> and new digits change only the real part.</li>
+      <li>Arithmetic, √x, x², 1/x, yˣ, eˣ, LN, 10ˣ, LOG, ABS, trig, hyperbolics and their inverses, →P and →R all work on complex numbers. Trig uses radians in complex mode.</li>
+      <li>Also <kbd class="g">g</kbd> <kbd>SF</kbd> 8 turns complex mode on; <kbd class="g">g</kbd> <kbd>CF</kbd> 8 turns it off and clears the imaginary parts.</li>
+    </ul>
+    <h3>Matrices A–E</h3>
+    <ul>
+      <li>Size: rows <kbd>ENTER</kbd> columns <kbd class="f">f</kbd> <kbd>DIM</kbd> <kbd>A</kbd> (up to 64 elements each).</li>
+      <li>Fill in order: <kbd class="f">f</kbd> <kbd>MATRIX</kbd> <kbd>1</kbd>, turn on <kbd class="f">f</kbd> <kbd>USER</kbd>, then value <kbd>STO</kbd> <kbd>A</kbd> repeatedly (<kbd>RCL</kbd> <kbd>A</kbd> reads back). R0 and R1 hold the row and column.</li>
+      <li>One element: value <kbd>ENTER</kbd> row <kbd>ENTER</kbd> column <kbd>STO</kbd> <kbd class="g">g</kbd> <kbd>A</kbd>; row <kbd>ENTER</kbd> column <kbd>RCL</kbd> <kbd class="g">g</kbd> <kbd>A</kbd>.</li>
+      <li><kbd>RCL</kbd> <kbd>MATRIX</kbd> <kbd>A</kbd> puts the matrix itself in X (shown as A 2 2). <kbd class="f">f</kbd> <kbd>RESULT</kbd> <kbd>B</kbd> picks where answers go.</li>
+      <li>With matrices in Y and X: <kbd>+</kbd> <kbd>−</kbd> <kbd>×</kbd>, and <kbd>÷</kbd> solves a system (Y ÷ X = X⁻¹Y). <kbd>1/x</kbd> inverts, <kbd>CHS</kbd> negates, a number in the other register works element by element.</li>
+      <li><kbd class="f">f</kbd> <kbd>MATRIX</kbd>: 0 clears all, 1 resets R0/R1, 4 transpose, 5 YᵀX, 6 residual, 7 row norm, 8 Frobenius norm, 9 determinant. 2, 3, <kbd class="f">f</kbd> P<sub>y,x</sub> and <kbd class="g">g</kbd> C<sub>y,x</sub> convert complex-matrix forms.</li>
+      <li>Number <kbd>STO</kbd> <kbd>MATRIX</kbd> <kbd>A</kbd> fills every element; with a matrix in X it copies that matrix into A.</li>
+    </ul>
     <h3>Memory and errors</h3>
     <ul>
-      <li>Any key clears an Error message. Error 0 means improper math, 2 bad statistics, 3 bad register, 4 missing label or line, 5 subroutines too deep, 8 no root.</li>
-      <li>Full reset: press <kbd>ON</kbd>, then <kbd>−</kbd>. The display shows Pr Error.</li>
+      <li>Any key clears an Error message. Error 0 means improper math, 1 improper matrix use, 2 bad statistics, 3 bad register or element, 4 missing label or line, 5 subroutines too deep, 7 SOLVE or ∫ inside itself, 8 no root, 10 matrix too large, 11 matrix sizes don't fit.</li>
+      <li><kbd>ON</kbd> then <kbd>−</kbd>: full reset (Pr Error). <kbd>ON</kbd> then <kbd>.</kbd>: swap decimal point and comma. <kbd>ON</kbd> then <kbd>×</kbd>: display test.</li>
+      <li><kbd>STO</kbd> <kbd class="f">f</kbd> <kbd>RAN #</kbd> sets the random seed; <kbd>RCL</kbd> <kbd class="f">f</kbd> <kbd>RAN #</kbd> reads it.</li>
     </ul>
     <h3>Computer keyboard</h3>
     <p>Digits, <kbd>.</kbd> <kbd>+</kbd> <kbd>−</kbd> <kbd>*</kbd> <kbd>/</kbd>, Enter, Backspace; <kbd>f</kbd> <kbd>g</kbd>; <kbd>s</kbd> STO, <kbd>r</kbd> RCL, <kbd>x</kbd> x≷y, <kbd>d</kbd> R↓, <kbd>c</kbd> CHS, <kbd>e</kbd> EEX, <kbd>q</kbd> √x.</p>
-    <h3>Not in this version yet</h3>
-    <p class="note">Matrices (MATRIX, DIM, RESULT), complex numbers (Re≷Im, flag 8) and the ON-key self tests. Those keys show a short note instead.</p>
+    <h3>Differences from the original</h3>
+    <p class="note">Registers are fixed at R0–R.9 and I, with 448 program lines and matrix storage kept separately, so DIM (i) isn't needed. Matrix ÷ and the determinant leave the original matrix unchanged rather than overwriting it with its LU form. Results are rounded to 10 digits after every step.</p>
   </div>
 </div>
 
@@ -152,12 +170,12 @@ const UNSHIFT = {
   '44': '#STO', '45': '#RCL', '48': 'dot', '49': 'splus', '40': 'add'
 };
 const FSHIFT = {
-  '11': 'gsbA', '12': 'gsbB', '13': 'gsbC', '14': 'gsbD', '15': 'gsbE', '16': 'nyiMatrix',
+  '11': 'gsbA', '12': 'gsbB', '13': 'gsbC', '14': 'gsbD', '15': 'gsbE', '16': '#MATRIX',
   '7': '#FIX', '8': '#SCI', '9': '#ENG', '10': '#SOLVE',
-  '21': '#LBL', '22': '#HYP', '23': 'nyiMatrix', '24': 'nyiMatrix', '25': 'nyiMatrix', '26': 'nyiMatrix',
+  '21': '#LBL', '22': '#HYP', '23': '#DIM', '24': 'showImag', '25': 'cplxI', '26': '#RESULT',
   '4': '#XCH', '5': '#DSE', '6': '#ISG', '20': '#INTEG',
   '31': 'pse', '32': 'clrSigma', '33': 'clrPrgm', '34': 'clrReg', '35': 'clrPrefix', '36': 'ran',
-  '1': 'toR', '2': 'toHMS', '3': 'toRad', '30': 'nyiComplex',
+  '1': 'toR', '2': 'toHMS', '3': 'toRad', '30': 'reim',
   '44': 'frac', '45': 'user', '0': 'fact', '48': 'yr', '49': 'lr', '40': 'pyx'
 };
 const GSHIFT = {
@@ -170,7 +188,82 @@ const GSHIFT = {
   '44': 'int', '45': 'MEM', '0': 'mean', '48': 'sdev', '49': 'sminus', '40': 'cyx'
 };
 // Operations that are never stored as program steps.
-const NONPROG = new Set(['SST', 'BST', 'PR', 'clrPrgm', 'MEM', 'clrPrefix', 'user', 'GTOL', 'nyiMatrix', 'nyiComplex']);
+const NONPROG = new Set(['SST', 'BST', 'PR', 'clrPrgm', 'MEM', 'clrPrefix', 'user', 'GTOL', 'showImag', 'DIMi']);
+const isDesc = v => v !== null && typeof v === 'object';
+const MLET = { A: 'A', B: 'b', C: 'C', D: 'd', E: 'E' };
+
+// ---------- complex arithmetic on [re, im] pairs ----------
+const C = {
+  add: (a, b) => [a[0] + b[0], a[1] + b[1]],
+  sub: (a, b) => [a[0] - b[0], a[1] - b[1]],
+  mul: (a, b) => [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]],
+  div: (a, b) => {
+    const d = b[0] * b[0] + b[1] * b[1]; if (d === 0) err(0);
+    return [(a[0] * b[0] + a[1] * b[1]) / d, (a[1] * b[0] - a[0] * b[1]) / d];
+  },
+  abs: a => Math.hypot(a[0], a[1]),
+  exp: a => { const e = Math.exp(a[0]); return a[1] === 0 ? [e, 0] : [e * Math.cos(a[1]), e * Math.sin(a[1])]; },
+  ln: a => { if (a[0] === 0 && a[1] === 0) err(0); return [Math.log(Math.hypot(a[0], a[1])), Math.atan2(a[1], a[0])]; },
+  sqrt: a => {
+    if (a[0] === 0 && a[1] === 0) return [0, 0];
+    const r = Math.hypot(a[0], a[1]);
+    const re = Math.sqrt((r + a[0]) / 2); let im = Math.sqrt((r - a[0]) / 2);
+    if (a[1] < 0) im = -im;
+    return [re, im];
+  },
+  pow: (y, x) => {
+    if (y[0] === 0 && y[1] === 0) { if (x[1] === 0 && x[0] > 0) return [0, 0]; err(0); }
+    if (y[1] === 0 && x[1] === 0 && (y[0] > 0 || Number.isInteger(x[0]))) return [Math.pow(y[0], x[0]), 0];
+    return C.exp(C.mul(x, C.ln(y)));
+  },
+  sin: a => [Math.sin(a[0]) * Math.cosh(a[1]), Math.cos(a[0]) * Math.sinh(a[1])],
+  cos: a => [Math.cos(a[0]) * Math.cosh(a[1]), -Math.sin(a[0]) * Math.sinh(a[1])],
+  tan: a => C.div(C.sin(a), C.cos(a)),
+  sinh: a => [Math.sinh(a[0]) * Math.cos(a[1]), Math.cosh(a[0]) * Math.sin(a[1])],
+  cosh: a => [Math.cosh(a[0]) * Math.cos(a[1]), Math.sinh(a[0]) * Math.sin(a[1])],
+  tanh: a => C.div(C.sinh(a), C.cosh(a)),
+  asin: z => { const w = C.ln(C.add([-z[1], z[0]], C.sqrt(C.sub([1, 0], C.mul(z, z))))); return [w[1], -w[0]]; },
+  acos: z => { const s = C.asin(z); return [Math.PI / 2 - s[0], -s[1]]; },
+  atan: z => {
+    if (z[0] === 0 && Math.abs(z[1]) === 1) err(0);
+    const iz = [-z[1], z[0]]; const d = C.sub(C.ln(C.sub([1, 0], iz)), C.ln(C.add([1, 0], iz)));
+    return [-d[1] / 2, d[0] / 2];
+  },
+  asinh: z => C.ln(C.add(z, C.sqrt(C.add(C.mul(z, z), [1, 0])))),
+  acosh: z => C.ln(C.add(z, C.mul(C.sqrt(C.add(z, [1, 0])), C.sqrt(C.sub(z, [1, 0]))))),
+  atanh: z => { if (z[1] === 0 && Math.abs(z[0]) === 1) err(0); const w = C.ln(C.div(C.add([1, 0], z), C.sub([1, 0], z))); return [w[0] / 2, w[1] / 2]; }
+};
+
+// ---------- dense matrix helpers (arrays of rows) ----------
+function lu(A) {
+  const n = A.length, M = A.map(r => r.slice()), perm = [...Array(n).keys()];
+  let sign = 1, big = 0;
+  for (const r of M) for (const v of r) big = Math.max(big, Math.abs(v));
+  const tiny = (big || 1) * 1e-10;
+  for (let k = 0; k < n; k++) {
+    let p = k;
+    for (let i = k + 1; i < n; i++) if (Math.abs(M[i][k]) > Math.abs(M[p][k])) p = i;
+    if (p !== k) { [M[p], M[k]] = [M[k], M[p]]; [perm[p], perm[k]] = [perm[k], perm[p]]; sign = -sign; }
+    if (M[k][k] === 0) M[k][k] = tiny; // the 15C replaces a zero pivot by a tiny value instead of stopping
+    for (let i = k + 1; i < n; i++) {
+      const f = M[i][k] / M[k][k]; M[i][k] = f;
+      for (let j = k + 1; j < n; j++) M[i][j] -= f * M[k][j];
+    }
+  }
+  return { M, perm, sign };
+}
+function luSolve({ M, perm }, B) { // B: n x m
+  const n = M.length, m = B[0].length, X = [];
+  for (let i = 0; i < n; i++) X.push(B[perm[i]].slice());
+  for (let c = 0; c < m; c++) {
+    for (let i = 0; i < n; i++) for (let k = 0; k < i; k++) X[i][c] -= M[i][k] * X[k][c];
+    for (let i = n - 1; i >= 0; i--) { for (let k = i + 1; k < n; k++) X[i][c] -= M[i][k] * X[k][c]; X[i][c] /= M[i][i]; }
+  }
+  return X;
+}
+const ident = n => Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => +(i === j)));
+const mmul = (A, B) => A.map(r => B[0].map((_, j) => r.reduce((s, v, k) => s + v * B[k][j], 0)));
+const tr = A => A[0].map((_, j) => A.map(r => r[j]));
 
 // ---------- number helpers ----------
 function fact(n) { let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; }
@@ -197,6 +290,7 @@ function sciParts(ax, n) { // ax>0, n decimals -> [mantissaStr, exp]
   let [m, e] = s.split('e');
   return [m, parseInt(e, 10)];
 }
+const swapSep = t => t.replace(/[.,]/g, c => (c === '.' ? ',' : '.'));
 function expStr(e) { return (e < 0 ? '-' : ' ') + String(Math.abs(e)).padStart(2, '0'); }
 
 function formatX(x, mode, n) {
@@ -238,7 +332,9 @@ class Calc {
   constructor(saved) { this.reset(); if (saved) this.load(saved); }
 
   reset() {
-    this.s = [0, 0, 0, 0]; this.lastx = 0; this.lift = true;
+    this.s = [0, 0, 0, 0]; this.si = [0, 0, 0, 0]; this.lastx = 0; this.lastxi = 0; this.lift = true;
+    this.mats = {}; for (const n of 'ABCDE') this.mats[n] = { r: 0, c: 0, d: [] };
+    this.result = 'A'; this.euro = false; this.selftest = false;
     this.regs = new Array(20).fill(0); this.I = 0;
     this.mode = 'FIX'; this.digits = 4; this.angle = 'DEG';
     this.flags = new Array(10).fill(false);
@@ -251,12 +347,13 @@ class Calc {
   save() {
     return { s: this.s, lastx: this.lastx, lift: this.lift, regs: this.regs, I: this.I, mode: this.mode,
       digits: this.digits, angle: this.angle, flags: this.flags, program: this.program, pc: this.pc,
-      user: this.user, seed: this.seed, v: 1 };
+      user: this.user, seed: this.seed, si: this.si, lastxi: this.lastxi, mats: this.mats, result: this.result, euro: this.euro, v: 2 };
   }
   load(o) {
     try {
-      if (!o || o.v !== 1) return;
-      for (const k of ['s', 'lastx', 'lift', 'regs', 'I', 'mode', 'digits', 'angle', 'flags', 'program', 'pc', 'user', 'seed'])
+      if (!o || (o.v !== 1 && o.v !== 2)) return;
+      for (const k of ['s', 'lastx', 'lift', 'regs', 'I', 'mode', 'digits', 'angle', 'flags', 'program', 'pc', 'user', 'seed',
+        'si', 'lastxi', 'mats', 'result', 'euro'])
         if (o[k] !== undefined) this[k] = o[k];
       this.flags[9] = false;
       if (this.pc > this.program.length) this.pc = 0;
@@ -267,16 +364,128 @@ class Calc {
   get y() { return this.s[1]; } set y(v) { this.s[1] = v; }
 
   norm(v) {
+    if (isDesc(v)) err(1);
     if (Number.isNaN(v)) err(0);
     if (!Number.isFinite(v) || Math.abs(v) > MAXV) { this.flags[9] = true; return v > 0 ? MAXV : -MAXV; }
     if (Math.abs(v) < 1e-99) return 0;
     return Number(v.toPrecision(10));
   }
-  push(v) { this.s = [v, this.s[0], this.s[1], this.s[2]]; }
-  pushL(v) { if (this.lift) this.push(v); else this.s[0] = v; this.lift = true; }
-  drop(v) { this.s = [v, this.s[2], this.s[3], this.s[3]]; }
-  un(f) { const x = this.x; const r = this.norm(f(x)); this.lastx = x; this.x = r; this.lift = true; }
-  bin(f) { const x = this.x, y = this.y; const r = this.norm(f(y, x)); this.lastx = x; this.drop(r); this.lift = true; }
+  push(v, vi = 0) { this.s = [v, this.s[0], this.s[1], this.s[2]]; this.si = [vi, this.si[0], this.si[1], this.si[2]]; }
+  pushL(v, vi = 0) { if (this.lift) this.push(v, vi); else { this.s[0] = v; this.si[0] = vi; } this.lift = true; }
+  drop(v, vi = 0) { this.s = [v, this.s[2], this.s[3], this.s[3]]; this.si = [vi, this.si[2], this.si[3], this.si[3]]; }
+  saveLast() { this.lastx = this.x; this.lastxi = this.si[0]; }
+  un(f) { const x = this.x; if (isDesc(x)) err(1); const r = this.norm(f(x)); this.saveLast(); this.x = r; this.lift = true; }
+  bin(f) { const x = this.x, y = this.y; if (isDesc(x) || isDesc(y)) err(1); const r = this.norm(f(y, x)); this.saveLast(); this.drop(r); this.lift = true; }
+  get cplx() { return this.flags[8]; }
+  cun(f) {
+    const r = f([this.x, this.si[0]]); const re = this.norm(r[0]), im = this.norm(r[1]);
+    this.saveLast(); this.s[0] = re; this.si[0] = im; this.lift = true;
+  }
+  cbin(f) {
+    const r = f([this.y, this.si[1]], [this.x, this.si[0]]); const re = this.norm(r[0]), im = this.norm(r[1]);
+    this.saveLast(); this.drop(re, im); this.lift = true;
+  }
+  setComplex(on) { this.flags[8] = on; if (!on) this.si = [0, 0, 0, 0]; }
+
+  // ---------- matrices ----------
+  M(n) { return this.mats[n]; }
+  matOf(v) { if (!isDesc(v)) err(1); const m = this.mats[v.m]; if (!m.r) err(11); return m; }
+  rows(m) { const A = []; for (let i = 0; i < m.r; i++) A.push(m.d.slice(i * m.c, i * m.c + m.c)); return A; }
+  dim(n, r, c) {
+    r = Math.trunc(Math.abs(r)); c = Math.trunc(Math.abs(c));
+    if (r === 0 || c === 0) r = c = 0;
+    if (r * c > 64) err(10);
+    const m = this.mats[n]; const d = m.d.slice(0, r * c); while (d.length < r * c) d.push(0);
+    m.r = r; m.c = c; m.d = d;
+  }
+  put(n, A) {
+    const r = A.length, c = r ? A[0].length : 0;
+    if (r * c > 64) err(10);
+    const m = this.mats[n]; m.r = r; m.c = c; m.d = [].concat(...A).map(v => this.norm(v));
+    return { m: n };
+  }
+  elIndex(m, i, j) {
+    i = Math.trunc(i); j = Math.trunc(j);
+    if (!(i >= 1 && i <= m.r && j >= 1 && j <= m.c)) err(3);
+    return (i - 1) * m.c + (j - 1);
+  }
+  advance(m, inProg) {
+    let i = Math.trunc(this.regs[0]), j = Math.trunc(this.regs[1]) + 1;
+    if (j > m.c) { j = 1; i++; if (i > m.r) { i = 1; if (inProg) this.skip(); } }
+    this.regs[0] = i; this.regs[1] = j;
+  }
+  matArith(op) {
+    const X = this.x, Y = this.y, dx = isDesc(X), dy = isDesc(Y);
+    const res = this.result;
+    let R;
+    const f = { add: (a, b) => a + b, sub: (a, b) => a - b, mul: (a, b) => a * b, div: (a, b) => { if (b === 0) err(0); return a / b; } }[op];
+    if (dx && dy) {
+      const A = this.matOf(Y), B = this.matOf(X), a = this.rows(A), b = this.rows(B);
+      if (op === 'add' || op === 'sub') {
+        if (A.r !== B.r || A.c !== B.c) err(11);
+        R = a.map((r, i) => r.map((v, j) => f(v, b[i][j])));
+      } else if (op === 'mul') {
+        if (A.c !== B.r || res === X.m || res === Y.m) err(11);
+        R = mmul(a, b);
+      } else {
+        if (B.r !== B.c || A.r !== B.r || res === X.m) err(11);
+        R = luSolve(lu(b), a);
+      }
+    } else if (dy) { // matrix op scalar
+      const a = this.rows(this.matOf(Y)); R = a.map(r => r.map(v => f(v, X)));
+    } else { // scalar op matrix
+      const B = this.matOf(X), b = this.rows(B);
+      if (op === 'div') { if (B.r !== B.c) err(11); R = luSolve(lu(b), ident(B.r)).map(r => r.map(v => Y * v)); }
+      else R = b.map(r => r.map(v => f(Y, v)));
+    }
+    const d = this.put(res, R);
+    this.saveLast(); this.drop(d); this.lift = true;
+  }
+  matrixFn(n, inProg) {
+    void inProg;
+    if (n === 0) { for (const k in this.mats) this.mats[k] = { r: 0, c: 0, d: [] }; return; }
+    if (n === 1) { this.regs[0] = 1; this.regs[1] = 1; return; }
+    const X = this.x, A = this.matOf(X), a = this.rows(A);
+    switch (n) {
+      case 2: { // Z^P (2m x n) -> Z~ (2m x 2n)
+        if (A.r % 2) err(11);
+        const m = A.r / 2, re = a.slice(0, m), im = a.slice(m);
+        this.put(X.m, re.map((r, i) => r.concat(im[i].map(v => -v))).concat(im.map((r, i) => r.concat(re[i]))));
+        return;
+      }
+      case 3: { // Z~ (2m x 2n) -> Z^P (2m x n)
+        if (A.r % 2 || A.c % 2) err(11);
+        this.put(X.m, a.map(r => r.slice(0, A.c / 2))); return;
+      }
+      case 4: this.put(X.m, tr(a)); return;
+      case 5: case 6: {
+        const B = this.matOf(this.y), b = this.rows(B), res = this.result;
+        if (res === X.m || res === this.y.m) err(11);
+        let R;
+        if (n === 5) { if (B.r !== A.r) err(11); R = mmul(tr(b), a); }
+        else {
+          const C0 = this.mats[res]; if (B.c !== A.r || C0.r !== B.r || C0.c !== A.c) err(11);
+          const P = mmul(b, a), c0 = this.rows(C0); R = c0.map((r, i) => r.map((v, j) => v - P[i][j]));
+        }
+        const d = this.put(res, R); this.saveLast(); this.drop(d); this.lift = true; return;
+      }
+      case 7: case 8: case 9: {
+        let v;
+        if (n === 7) v = Math.max(...a.map(r => r.reduce((s, x) => s + Math.abs(x), 0)));
+        else if (n === 8) v = Math.sqrt(A.d.reduce((s, x) => s + x * x, 0));
+        else {
+          if (A.r !== A.c) err(11);
+          const L = lu(a); v = L.sign; for (let i = 0; i < A.r; i++) v *= L.M[i][i];
+          if (Math.abs(v) < 1e-90) v = 0;
+        }
+        this.saveLast(); this.x = this.norm(v); this.si[0] = 0; this.lift = true; return;
+      }
+    }
+  }
+  descText(v) {
+    const m = this.mats[v.m];
+    return ' ' + MLET[v.m] + padCells(`${m.r}  ${m.c}`, 9, true);
+  }
 
   // angle helpers
   toRadA(a) { return this.angle === 'DEG' ? a * Math.PI / 180 : this.angle === 'GRD' ? a * Math.PI / 200 : a; }
@@ -352,9 +561,12 @@ class Calc {
     if (this.error) { this.error = null; return; }
     if (this.temp) this.temp = null;
     if (this.flags[9] && k === '35') { this.flags[9] = false; return; }
+    this.selftest = false;
     if (this.onPending) {
       this.onPending = false;
       if (k === '30') { this.reset(); this.temp = 'Pr Error'; return; }
+      if (k === '48') { this.euro = !this.euro; return; }
+      if (k === '20' || k === '40') { this.selftest = true; this.temp = '-8,8,8,8,8,8,8,8,8,8,'; return; }
     }
     if (k === '41') { this.onPending = true; this.shift = null; this.pfx = null; return; }
     if (k === '42' || k === '43') { this.shift = (this.shift === (k === '42' ? 'f' : 'g')) ? null : (k === '42' ? 'f' : 'g'); return; }
@@ -380,8 +592,19 @@ class Calc {
     const p = this.pfx;
     const finish = (op, a, extra) => { this.pfx = null; this.dispatch({ op, a, c: p.codes.concat(extra) }); return true; };
     if ((sh === 'f' || !sh) && k === '35') { this.pfx = null; return true; } // CLEAR PREFIX or back arrow
-    if (sh) { this.pfx = null; return false; }
     const kind = p.kind;
+    if ((kind === 'STO' || kind === 'RCL') && !p.dot && !p.arith) {
+      if (p.sub) {
+        if (!sh && LBLKEYS[k]) return finish(kind + p.sub, LBLKEYS[k], k);
+        this.pfx = null; return false;
+      }
+      if (k === '16' && sh !== 'g') { p.sub = 'MAT'; p.codes = p.codes.concat('16'); return true; }
+      if (k === '23' && kind === 'RCL' && sh !== 'g') { p.sub = 'DIM'; p.codes = p.codes.concat('23'); return true; }
+      if (k === '36' && sh === 'f') return finish(kind === 'STO' ? 'stoRan' : 'rclRan', undefined, '36');
+      if (sh === 'g' && LBLKEYS[k]) return finish(kind + 'G', LBLKEYS[k], ['43', k]);
+      if (!sh && LBLKEYS[k]) return finish(kind + 'EL', LBLKEYS[k], k);
+    }
+    if (sh) { this.pfx = null; return false; }
     const regTarget = () => {
       if (isDigit(k)) return p.dot ? [10 + +k, '.' + k] : [+k, k];
       if (k === '25') return ['I', '25'];
@@ -418,6 +641,16 @@ class Calc {
         break;
       case 'SF': case 'CF': case 'FQ': case 'TEST':
         if (isDigit(k)) return finish(kind, +k, k);
+        break;
+      case 'MATRIX':
+        if (isDigit(k)) return finish('MATRIX', +k, k);
+        break;
+      case 'DIM':
+        if (LBLKEYS[k]) return finish('DIM', LBLKEYS[k], k);
+        if (k === '24') return finish('DIMi', undefined, k);
+        break;
+      case 'RESULT':
+        if (LBLKEYS[k]) return finish('RESULT', LBLKEYS[k], k);
         break;
       case 'HYP': case 'AHYP':
         if (k === '23' || k === '24' || k === '25') return finish(kind, { '23': 'sin', '24': 'cos', '25': 'tan' }[k], k);
@@ -594,6 +827,32 @@ class Calc {
     const entryOps = op === 'digit' || op === 'dot' || op === 'eex' || (op === 'chs' && this.entry) || (op === 'back' && this.entry);
     if (!entryOps) this.endEntry();
     const S = this;
+    const dx = isDesc(this.x), dy = isDesc(this.y);
+    if (dx || dy) {
+      if (op === 'add' || op === 'sub' || op === 'mul' || op === 'div') return this.matArith(op);
+      if (dx && op === 'inv') {
+        const A = this.matOf(this.x); if (A.r !== A.c) err(11);
+        const d = this.put(this.result, luSolve(lu(this.rows(A)), ident(A.r)));
+        this.saveLast(); this.x = d; this.lift = true; return;
+      }
+      if (dx && op === 'chs') { const A = this.matOf(this.x); A.d = A.d.map(v => -v); return; }
+      if (dx && (op === 'pyx' || op === 'cyx')) {
+        const A = this.matOf(this.x), a = this.rows(A);
+        if (op === 'pyx') { // Z^C (m x 2n, interleaved) -> Z^P (2m x n)
+          if (A.c % 2) err(11);
+          const re = a.map(r => r.filter((_, j) => j % 2 === 0)), im = a.map(r => r.filter((_, j) => j % 2 === 1));
+          this.put(this.x.m, re.concat(im));
+        } else { // Z^P -> Z^C
+          if (A.r % 2) err(11);
+          const m = A.r / 2; this.put(this.x.m, a.slice(0, m).map((r, i) => r.flatMap((v, j) => [v, a[m + i][j]])));
+        }
+        return;
+      }
+    }
+    if (this.cplx && !dx && !dy) {
+      const r = this.cexec(op, a);
+      if (r) return;
+    }
     switch (op) {
       case 'digit': return this.digitKey(a);
       case 'dot': return this.dotKey();
@@ -605,13 +864,13 @@ class Calc {
           this.x = this.entryValue();
         } else this.x = -this.x;
         return;
-      case 'enter': this.push(this.x); this.lift = false; return;
+      case 'enter': this.push(this.x, this.si[0]); this.lift = false; return;
       case 'clx': this.x = 0; this.lift = false; return;
-      case 'lstx': return this.pushL(this.lastx);
+      case 'lstx': return this.pushL(this.lastx, this.lastxi);
       case 'pi': return this.pushL(PI10);
-      case 'rdn': this.s = [this.s[1], this.s[2], this.s[3], this.s[0]]; this.lift = true; return;
-      case 'rup': this.s = [this.s[3], this.s[0], this.s[1], this.s[2]]; this.lift = true; return;
-      case 'swap': this.s = [this.s[1], this.s[0], this.s[2], this.s[3]]; this.lift = true; return;
+      case 'rdn': { const r = a => [a[1], a[2], a[3], a[0]]; this.s = r(this.s); this.si = r(this.si); this.lift = true; return; }
+      case 'rup': { const r = a => [a[3], a[0], a[1], a[2]]; this.s = r(this.s); this.si = r(this.si); this.lift = true; return; }
+      case 'swap': { const r = a => [a[1], a[0], a[2], a[3]]; this.s = r(this.s); this.si = r(this.si); this.lift = true; return; }
       case 'add': return this.bin((y, x) => y + x);
       case 'sub': return this.bin((y, x) => y - x);
       case 'mul': return this.bin((y, x) => y * x);
@@ -710,7 +969,7 @@ class Calc {
         const r = (n * sxy - sx * sy) / Math.sqrt(D * E);
         const x = this.x; this.lastx = x; this.x = this.norm(r); this.push(this.norm(A * x + B)); this.lift = true; return;
       }
-      case 'clrSigma': for (let i = 2; i <= 7; i++) this.regs[i] = 0; this.s = [0, 0, 0, 0]; return;
+      case 'clrSigma': for (let i = 2; i <= 7; i++) this.regs[i] = 0; this.s = [0, 0, 0, 0]; this.si = [0, 0, 0, 0]; return;
       case 'clrReg': this.regs.fill(0); this.I = 0; return;
       case 'clrPrefix': {
         const ax = Math.abs(this.x);
@@ -719,12 +978,13 @@ class Calc {
       }
       case 'STO': {
         const { r, op: ar } = a; let v = this.x;
+        if (!ar && isDesc(v)) { this.setReg(r, v); this.lift = true; return; }
         if (ar) { const c = this.getReg(r); v = ar === '+' ? c + v : ar === '-' ? c - v : ar === '*' ? c * v : (v === 0 ? err(0) : c / v); }
         this.setReg(r, this.norm(v)); this.lift = true; return;
       }
       case 'RCL': {
         const { r, op: ar } = a; const c = this.getReg(r);
-        if (!ar) return this.pushL(c);
+        if (!ar) return this.pushL(isDesc(c) ? { m: c.m } : c);
         const x = this.x; let v = ar === '+' ? x + c : ar === '-' ? x - c : ar === '*' ? x * c : (c === 0 ? err(0) : x / c);
         this.lastx = x; this.x = this.norm(v); this.lift = true; return;
       }
@@ -747,15 +1007,63 @@ class Calc {
         this.mode = a.m; this.digits = n; return;
       }
       case 'SF': case 'CF':
-        if (a === 8 && op === 'SF') { this.toast = 'Complex mode arrives in the next version'; return; }
+        if (a === 8) { this.setComplex(op === 'SF'); return; }
         this.flags[a] = op === 'SF'; return;
       case 'FQ': if (!this.flags[a] && inProg) this.skip(); return;
       case 'TEST': case 'xley': case 'xeq0': {
-        const x = this.x, y = this.y;
-        const t = op === 'xley' ? x <= y : op === 'xeq0' ? x === 0 :
-          [x !== 0, x > 0, x < 0, x >= 0, x <= 0, x === y, x !== y, x > y, x < y, x >= y][a];
+        const x = this.x, y = this.y, xi = this.si[0], yi = this.si[1];
+        const same = (p, q) => isDesc(p) && isDesc(q) ? p.m === q.m : p === q;
+        const z0 = x === 0 && xi === 0, eq = same(x, y) && xi === yi;
+        const t = op === 'xley' ? x <= y : op === 'xeq0' ? z0 :
+          [!z0, x > 0, x < 0, x >= 0, x <= 0, eq, !eq, x > y, x < y, x >= y][a];
         if (!t && inProg) this.skip();
         this.lift = true; return;
+      }
+      case 'cplxI': { // Y + iX
+        const x = this.x, y = this.y; if (isDesc(x) || isDesc(y)) err(1);
+        this.saveLast(); this.setComplex(true);
+        this.s = [y, this.s[2], this.s[3], this.s[3]]; this.si = [x, this.si[2], this.si[3], this.si[3]];
+        this.lift = true; return;
+      }
+      case 'reim': {
+        if (isDesc(this.x)) err(1);
+        this.setComplex(true); [this.s[0], this.si[0]] = [this.si[0], this.s[0]]; this.lift = true; return;
+      }
+      case 'showImag': {
+        if (!this.cplx) err(3);
+        const t = formatX(this.si[0], this.mode, this.digits); this.temp = this.euro ? swapSep(t) : t; return;
+      }
+      case 'stoRan': if (isDesc(this.x)) err(1); this.seed = Math.abs(this.x) % 1; return;
+      case 'rclRan': return this.pushL(Number(this.seed.toFixed(10)));
+      case 'DIM': this.dim(a, this.y, this.x); return;
+      case 'DIMi': this.toast = 'Registers are fixed at R0–R.9 and I here; DIM (i) is not needed'; return;
+      case 'RESULT': this.result = a; return;
+      case 'MATRIX': return this.matrixFn(a, inProg);
+      case 'RCLDIM': { const m = this.mats[a]; this.pushL(m.r); this.push(m.c); return; }
+      case 'RCLMAT': return this.pushL({ m: a });
+      case 'STOMAT': {
+        const m = this.mats[a], x = this.x;
+        if (isDesc(x)) { const src = this.mats[x.m]; this.mats[a] = { r: src.r, c: src.c, d: src.d.slice() }; }
+        else m.d = m.d.map(() => x);
+        return;
+      }
+      case 'STOEL': case 'RCLEL': {
+        const m = this.mats[a]; if (!m.r) err(11);
+        const k = this.elIndex(m, this.regs[0], this.regs[1]);
+        if (op === 'STOEL') { if (isDesc(this.x)) err(1); m.d[k] = this.x; this.lift = true; }
+        else this.pushL(m.d[k]);
+        if (this.user) this.advance(m, inProg);
+        return;
+      }
+      case 'STOG': { // Z -> A(Y, X)
+        const m = this.mats[a]; if (!m.r) err(11);
+        const k = this.elIndex(m, this.y, this.x), v = this.s[2]; if (isDesc(v)) err(1);
+        m.d[k] = v; this.s = [v, this.s[3], this.s[3], this.s[3]]; this.si = [this.si[2], this.si[3], this.si[3], this.si[3]]; this.lift = true; return;
+      }
+      case 'RCLG': {
+        const m = this.mats[a]; if (!m.r) err(11);
+        const k = this.elIndex(m, this.y, this.x);
+        this.saveLast(); this.s = [m.d[k], this.s[2], this.s[3], this.s[3]]; this.si = [0, this.si[2], this.si[3], this.si[3]]; this.lift = true; return;
       }
       case 'LBL': return;
       case 'GTO': {
@@ -798,10 +1106,23 @@ class Calc {
         return;
       case 'user': this.user = !this.user; return;
       case 'MEM': this.toast = `Program uses ${this.program.length} of ${MAXLINES} lines`; return;
-      case 'nyiMatrix': this.toast = 'Matrix functions arrive in the next version'; return;
-      case 'nyiComplex': this.toast = 'Complex functions arrive in the next version'; return;
     }
     void S;
+  }
+
+  // complex-mode versions of functions; returns true if handled
+  cexec(op, a) {
+    const U = { sqrt: C.sqrt, sq: z => C.mul(z, z), exp: C.exp, ln: C.ln, inv: z => C.div([1, 0], z),
+      p10: z => C.exp(C.mul(z, [Math.LN10, 0])), log: z => { const w = C.ln(z); return [w[0] / Math.LN10, w[1] / Math.LN10]; },
+      abs: z => [C.abs(z), 0], sin: C.sin, cos: C.cos, tan: C.tan, asin: C.asin, acos: C.acos, atan: C.atan };
+    const B = { add: C.add, sub: C.sub, mul: C.mul, div: C.div, ypx: C.pow };
+    if (U[op]) { this.cun(U[op]); return true; }
+    if (B[op]) { this.cbin(B[op]); return true; }
+    if (op === 'HYP') { this.cun(C[a + 'h']); return true; }
+    if (op === 'AHYP') { this.cun(C['a' + a + 'h']); return true; }
+    if (op === 'toP') { this.cun(z => [C.abs(z), this.fromRadA(Math.atan2(z[1], z[0]))]); return true; }
+    if (op === 'toR') { this.cun(z => [z[0] * this.trig('cos', z[1]), z[0] * this.trig('sin', z[1])]); return true; }
+    return false;
   }
 
   roundToDisplay(x) {
@@ -838,18 +1159,21 @@ class Calc {
   displayText() {
     if (this.error) return ' ' + padCells(this.error, 10);
     if (this.running && !this.pauseUntil) return ' ' + padCells('running', 10);
+    if (this.temp && this.selftest) return this.temp;
     if (this.temp) return this.temp.length && this.temp[0] !== ' ' && this.temp[0] !== '-' ? ' ' + padCells(this.temp, 10) : padCells(this.temp, 11);
     if (this.prgm) return this.lineText(this.pc);
-    if (this.entry) return this.entryText();
-    return formatX(this.x, this.mode, this.digits);
+    if (isDesc(this.x)) return this.descText(this.x);
+    const t = this.entry ? this.entryText() : formatX(this.x, this.mode, this.digits);
+    return this.euro ? swapSep(t) : t;
   }
   annunciators() {
     return { user: this.user, f: this.shift === 'f', g: this.shift === 'g',
-      rad: this.angle !== 'DEG', grd: this.angle === 'GRD', c: this.flags[8], prgm: this.prgm, blink: this.flags[9] };
+      rad: this.angle !== 'DEG', grd: this.angle === 'GRD', c: this.flags[8], prgm: this.prgm, blink: this.flags[9],
+      all: this.selftest };
   }
 }
 
-return { Calc, CalcError, formatX };
+return { Calc, CalcError, formatX, C };
 })();
 if (typeof module !== 'undefined') module.exports = HP15;
 
@@ -931,7 +1255,7 @@ function render() {
     lcd.setAttribute('aria-label', text.trim());
   }
   const a = calc.annunciators();
-  for (const [id] of ANN) document.getElementById('a_' + id).classList.toggle('on', !!a[id]);
+  for (const [id] of ANN) document.getElementById('a_' + id).classList.toggle('on', !!a[id] || !!a.all);
   lcd.classList.toggle('blink', !!a.blink || (calc.running && !calc.pauseUntil));
   if (calc.toast) {
     toastEl.textContent = calc.toast; toastEl.classList.add('on'); calc.toast = null;
@@ -952,7 +1276,7 @@ let holdTemp = false, holdSince = 0;
 function press(code) {
   const wasRunning = calc.running;
   calc.press(code);
-  holdTemp = !!calc.temp && calc.temp !== 'Pr Error';
+  holdTemp = !!calc.temp && calc.temp !== 'Pr Error' && !calc.selftest;
   holdSince = performance.now();
   render(); persist();
   if (calc.running && !wasRunning) requestAnimationFrame(loop);
@@ -961,7 +1285,7 @@ function release() {
   if (!holdTemp) return;
   holdTemp = false;
   const wait = Math.max(0, 450 - (performance.now() - holdSince));
-  setTimeout(() => { if (calc.temp && calc.temp !== 'Pr Error') { calc.temp = null; render(); } }, wait);
+  setTimeout(() => { if (calc.temp && calc.temp !== 'Pr Error' && !calc.selftest) { calc.temp = null; render(); } }, wait);
 }
 
 // ----- touch -----
