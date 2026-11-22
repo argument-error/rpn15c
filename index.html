@@ -76,9 +76,9 @@ html,body{margin:0;height:100%;background:radial-gradient(120% 90% at 50% 40%,#2
 .pl.down{transform:translateY(1px);filter:brightness(.92)}
 /* side panel */
 #panel{position:absolute;top:0;right:0;bottom:0;display:none;flex-direction:column;background:#1d1b18;color:#ece8de;
-  border-left:1px solid #000;box-shadow:-10px 0 28px #0008;font:15px/1.4 system-ui,sans-serif;touch-action:pan-y;user-select:none}
+  border-left:1px solid #000;box-shadow:-10px 0 28px #0008;font:15px/1.4 system-ui,sans-serif;user-select:none}
 #panel.on{display:flex}
-#panel *{touch-action:pan-y}#panel textarea,#panel input{touch-action:auto;user-select:text;-webkit-user-select:text}
+#panel,#panel *{touch-action:pan-x pan-y}#panel textarea,#panel input{touch-action:auto;user-select:text;-webkit-user-select:text}
 .ph{display:flex;border-bottom:1px solid #3a3631;flex:none}
 .tabs{display:flex;flex:1}
 .tabs button,.pclose{min-height:46px;background:none;border:0;color:#b7b0a2;font:700 16px 'Archivo Narrow',sans-serif;cursor:pointer;border-bottom:3px solid transparent}
@@ -115,7 +115,7 @@ html,body{margin:0;height:100%;background:radial-gradient(120% 90% at 50% 40%,#2
 .back{background:none;border:0;color:var(--gold);font:700 15px 'Archivo Narrow',sans-serif;min-height:40px;padding:0;cursor:pointer}
 .sub h4{margin:6px 0;font:700 17px 'Archivo Narrow',sans-serif}
 .sub p{margin:6px 0;font-size:14px;color:#cfc8ba}
-.sub textarea{width:100%;min-height:150px;background:#12110f;color:#eee;border:1px solid #4a453e;border-radius:8px;font:13px/1.4 ui-monospace,monospace;padding:8px;resize:vertical}
+.sub textarea{width:100%;height:110px;min-height:80px;background:#12110f;color:#eee;border:1px solid #4a453e;border-radius:8px;font:13px/1.4 ui-monospace,monospace;padding:8px;resize:vertical}
 .sub input[type=text]{flex:1;min-height:40px;background:#12110f;color:#eee;border:1px solid #4a453e;border-radius:8px;padding:0 10px;font:16px system-ui}
 .row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0}
 .lib{list-style:none;padding:0;margin:8px 0}.lib li{display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2e2b27}
@@ -1618,14 +1618,15 @@ function viewImport() {
     const { steps, errors } = importResult;
     res = `<p>${steps.length ? `Ready to load <b>${steps.length}</b> step${steps.length === 1 ? '' : 's'}.` : 'No program steps found.'}</p>` +
       (errors.length ? `<ul class="errs">${errors.slice(0, 8).map(e => `<li>Line ${e.line}: ${esc(e.msg)} — “${esc(e.text.slice(0, 40))}”</li>`).join('')}${errors.length > 8 ? `<li>…and ${errors.length - 8} more</li>` : ''}</ul>` : '') +
-      (steps.length ? `<div class="row"><button class="pb go" data-act="doImport">${importMode === 'replace' ? 'Replace program' : 'Append to program'} (${steps.length})</button></div>` : '');
+      (steps.length ? `<div class="row" id="loadRow"><button class="pb go" data-act="doImport">Load ${steps.length} step${steps.length === 1 ? '' : 's'} now</button></div>` : '');
   }
   return `<div class="sub"><button class="back" data-act="list">‹ Program</button><h4>Import a program</h4>
-    <p>Paste a listing with key codes, such as <code>001 { 42 21 11 } f LBL A</code> or <code>001-42,21,11</code>. Names after the codes are ignored.</p>
-    <textarea id="impText" spellcheck="false" placeholder="Paste listing here">${esc(importText)}</textarea>
-    <div class="row"><button class="pb" data-act="openFile">Open file…</button>
-    <button class="pb" data-act="mode" data-v="replace" aria-pressed="${importMode === 'replace'}">Replace</button><button class="pb" data-act="mode" data-v="append" aria-pressed="${importMode === 'append'}">Append</button>
-    <button class="pb go" data-act="check">Check</button></div>${res}</div>`;
+    <div class="row"><button class="pb" data-act="openFile">Open file…</button><button class="pb go" data-act="check">Check</button></div>
+    ${res}
+    <div class="row"><span class="info" style="margin:0">When loading:</span>
+    <button class="pb" data-act="mode" data-v="replace" aria-pressed="${importMode === 'replace'}">replace current program</button><button class="pb" data-act="mode" data-v="append" aria-pressed="${importMode === 'append'}">add to the end</button></div>
+    <textarea id="impText" spellcheck="false" placeholder="Paste a listing here, or tap Open file…">${esc(importText)}</textarea>
+    <p class="info">Listings with key codes work, such as <code>001 { 42 21 11 } f LBL A</code> or <code>001-42,21,11</code>. Names after the codes are ignored.</p></div>`;
 }
 function libLoad() { try { return JSON.parse(localStorage.getItem('rpn15.lib') || '{}'); } catch (e) { return {}; } }
 function libSave(l) { try { localStorage.setItem('rpn15.lib', JSON.stringify(l)); return true; } catch (e) { msg('Could not save on this device'); return false; } }
@@ -1644,8 +1645,8 @@ function viewBackup() {
     <p>Stack, registers, program, matrices and settings, as text you can keep or move to another device.</p>
     <div class="row"><button class="pb" data-act="bkCopy">Copy backup</button><button class="pb" data-act="bkShare">Share</button><button class="pb" data-act="bkSave">Save file</button></div>
     <h4>Restore</h4><p>Paste a backup or open a backup file. This replaces everything currently in the calculator.</p>
-    <textarea id="rsText" spellcheck="false" placeholder="Paste backup here">${esc(restoreText)}</textarea>
-    <div class="row"><button class="pb" data-act="openFile">Open file…</button><button class="pb${confirmKey === 'restore' ? ' warn' : ' go'}" data-act="restore">${confirmKey === 'restore' ? 'Tap again to replace everything' : 'Restore'}</button></div></div>`;
+    <div class="row"><button class="pb" data-act="openFile">Open file…</button><button class="pb${confirmKey === 'restore' ? ' warn' : ' go'}" data-act="restore">${confirmKey === 'restore' ? 'Tap again to replace everything' : 'Restore'}</button></div>
+    <textarea id="rsText" spellcheck="false" placeholder="Paste backup here, or tap Open file…">${esc(restoreText)}</textarea></div>`;
 }
 function drawPanel(force) {
   if (!panelOpen) return;
@@ -1719,7 +1720,11 @@ pbody.addEventListener('click', e => {
     case 'save': saveFile(HP15.listing(calc.program), `rpn15c-program-${stamp()}.txt`); return;
     case 'openFile': fileIn.click(); return;
     case 'mode': importMode = b.dataset.v; drawPanel(true); return;
-    case 'check': importResult = HP15.importProgram(importText); drawPanel(true); return;
+    case 'check': {
+      importResult = HP15.importProgram(importText); drawPanel(true);
+      pbody.scrollTop = 0;
+      return;
+    }
     case 'doImport': {
       const steps = importResult.steps;
       if (importMode === 'append' && calc.program.length + steps.length > HP15.MAXLINES) { msg('That would exceed ' + HP15.MAXLINES + ' lines'); return; }
