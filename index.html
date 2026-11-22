@@ -694,6 +694,7 @@ class Calc {
     const finish = (op, a, extra) => { this.pfx = null; this.dispatch({ op, a, c: p.codes.concat(extra) }); return true; };
     if ((sh === 'f' || !sh) && k === '35') { this.pfx = null; return true; } // CLEAR PREFIX or back arrow
     const kind = p.kind;
+    if ((kind === 'STO' || kind === 'RCL') && p.arith && !p.dot && !sh && LBLKEYS[k]) return finish(kind + 'EL', { m: LBLKEYS[k], op: p.arith }, k);
     if ((kind === 'STO' || kind === 'RCL') && !p.dot && !p.arith) {
       if (p.sub) {
         if (!sh && LBLKEYS[k]) return finish(kind + p.sub, LBLKEYS[k], k);
@@ -701,7 +702,7 @@ class Calc {
       }
       if (k === '16' && sh !== 'g') { p.sub = 'MAT'; p.codes = p.codes.concat('16'); return true; }
       if (k === '23' && kind === 'RCL' && sh !== 'g') { p.sub = 'DIM'; p.codes = p.codes.concat('23'); return true; }
-      if (k === '36' && sh === 'f') return finish(kind === 'STO' ? 'stoRan' : 'rclRan', undefined, '36');
+      if (k === '36' && sh !== 'g') return finish(kind === 'STO' ? 'stoRan' : 'rclRan', undefined, '36');
       if (sh === 'g' && LBLKEYS[k]) return finish(kind + 'G', LBLKEYS[k], ['43', k]);
       if (!sh && LBLKEYS[k]) return finish(kind + 'EL', LBLKEYS[k], k);
     }
@@ -764,6 +765,7 @@ class Calc {
   dispatch(ins) {
     if (this.prgm && !NONPROG.has(ins.op) && !(ins.op === 'back')) {
       if (this.program.length >= MAXLINES) err(10);
+      if (this.user && (ins.op === 'STOEL' || ins.op === 'RCLEL')) ins.u = true;
       this.program.splice(this.pc, 0, ins); this.pc++;
       return;
     }
@@ -1149,11 +1151,16 @@ class Calc {
         return;
       }
       case 'STOEL': case 'RCLEL': {
-        const m = this.mats[a]; if (!m.r) err(11);
+        const name = typeof a === 'string' ? a : a.m, ar = typeof a === 'string' ? null : a.op;
+        const m = this.mats[name]; if (!m.r) err(11);
         const k = this.elIndex(m, this.regs[0], this.regs[1]);
-        if (op === 'STOEL') { if (isDesc(this.x)) err(1); m.d[k] = this.x; this.lift = true; }
+        const f = { '+': (p, q) => p + q, '-': (p, q) => p - q, '*': (p, q) => p * q, '/': (p, q) => { if (q === 0) err(0); return p / q; } }[ar];
+        if (isDesc(this.x) && (op === 'STOEL' || ar)) err(1);
+        if (op === 'STOEL') { m.d[k] = f ? this.norm(f(m.d[k], this.x)) : this.x; this.lift = true; }
+        else if (f) { const x = this.x; this.x = this.norm(f(x, m.d[k])); this.lastx = x; this.lastxi = this.si[0]; this.lift = true; }
         else this.pushL(m.d[k]);
-        if (this.user) this.advance(m, inProg);
+        // in a program the step itself records whether it was keyed in USER mode
+        if (inProg ? ins.u : this.user) this.advance(m, inProg);
         return;
       }
       case 'STOG': { // Z -> A(Y, X)
@@ -1305,7 +1312,7 @@ function mnemonic(c) {
 }
 function listing(program, title) {
   const lines = ['# ' + (title || 'RPN-15C program') + ', ' + program.length + ' lines'];
-  program.forEach((ins, i) => lines.push(`${String(i + 1).padStart(3, '0')} { ${ins.c.join(' ').padStart(8)} } ${mnemonic(ins.c)}`));
+  program.forEach((ins, i) => lines.push(`${String(i + 1).padStart(3, '0')} {${ins.u ? 'u' : ' '}${ins.c.join(' ').padStart(8)} } ${ins.u ? 'u ' : ''}${mnemonic(ins.c)}`));
   return lines.join('\n') + '\n';
 }
 const VALID = new Set(Object.keys(KT));
@@ -1323,14 +1330,16 @@ function parseLine(line) {
     if (+m[1] === 0) return null;
     codeStr = m[2];
   }
-  const toks = [];
+  const toks = []; let u = false;
   for (const tok of codeStr.split(/[\s,]+/).filter(Boolean)) {
+    if (tok === 'u' && !toks.length) { u = true; continue; }
+    if (/^u\d{1,2}$/.test(tok) && !toks.length && VALID.has(tok.slice(1))) { u = true; toks.push(tok.slice(1)); continue; }
     if (/^\.\d$/.test(tok) || (/^\d{1,2}$/.test(tok) && VALID.has(tok))) toks.push(tok);
     else if (m && !t.includes('{')) break; // stop at the mnemonic text
     else return { err: `unknown key code “${tok}”` };
   }
   if (!toks.length) return { err: 'no key codes' };
-  return { codes: toks };
+  return { codes: toks, u };
 }
 // Converts listing text into program steps by replaying the key codes in program mode.
 function importProgram(text) {
@@ -1341,12 +1350,16 @@ function importProgram(text) {
     if (!r) return;
     if (r.err) { errors.push({ line: idx + 1, text: ln.trim(), msg: r.err }); return; }
     const before = t.program.length;
-    t.pfx = null; t.shift = null; t.error = null;
+    t.pfx = null; t.shift = null; t.error = null; t.user = !!r.u;
     for (const tok of r.codes) { if (tok[0] === '.') { t.press('48'); t.press(tok[1]); } else t.press(tok); }
     if (t.program.length !== before + 1 || t.error) {
       t.program.length = Math.min(t.program.length, before); t.pc = t.program.length;
       errors.push({ line: idx + 1, text: ln.trim(), msg: t.error === 'Error 10' ? 'program memory full' : 'not a single valid program step' });
+    } else if (r.u && !t.program[before].u) {
+      t.program.length = before; t.pc = before;
+      errors.push({ line: idx + 1, text: ln.trim(), msg: 'u only applies to STO or RCL of a matrix element' });
     }
+    t.user = false;
     t.pfx = null; t.shift = null; t.error = null;
   });
   return { steps: t.program, errors };
@@ -1591,7 +1604,7 @@ function viewMat() {
 function viewProgList() {
   const P = calc.program;
   const lines = [`<div class="ln${calc.pc === 0 ? ' cur' : ''}" data-line="0"><span class="no">000</span><span class="kc"></span><span class="mn"></span></div>`]
-    .concat(P.map((ins, i) => `<div class="ln${calc.pc === i + 1 ? ' cur' : ''}" data-line="${i + 1}"><span class="no">${String(i + 1).padStart(3, '0')}</span><span class="kc">${esc(ins.c.join(' '))}</span><span class="mn">${esc(HP15.mnemonic(ins.c))}</span></div>`));
+    .concat(P.map((ins, i) => `<div class="ln${calc.pc === i + 1 ? ' cur' : ''}" data-line="${i + 1}"><span class="no">${String(i + 1).padStart(3, '0')}</span><span class="kc">${ins.u ? 'u ' : ''}${esc(ins.c.join(' '))}</span><span class="mn">${ins.u ? 'u ' : ''}${esc(HP15.mnemonic(ins.c))}</span></div>`));
   return `<div class="bar"><button class="pb" data-act="copy">Copy</button><button class="pb" data-act="share">Share</button><button class="pb" data-act="save">Save file</button>
     <button class="pb" data-act="import">Import</button><button class="pb" data-act="library">Library</button><button class="pb" data-act="backup">Backup</button></div>
     <p class="info">${P.length} of ${HP15.MAXLINES} lines · at line ${String(calc.pc).padStart(3, '0')}. Tap a line to go to it.</p>
