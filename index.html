@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>RPN-15C Calculator</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-15c-192.png">
+<link rel="icon" href="icon-rpn3-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -22,6 +22,7 @@
 html,body{margin:0;height:100%;background:radial-gradient(120% 90% at 50% 40%,#26241f,var(--bg));overflow:hidden;
   -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:none;
   font:16px/1.5 'Archivo Narrow','Arial Narrow',system-ui,sans-serif;color:#eee}
+#stage{position:fixed;left:50%;top:50%;transform-origin:50% 50%}
 #calc{position:absolute;left:50%;top:50%;width:1000px;height:560px;transform-origin:50% 50%;border-radius:26px;
   background:var(--face);box-shadow:0 30px 60px #000a,0 0 0 2px #0008,inset 0 2px 0 #ffffff14;overflow:hidden}
 .bezel{position:absolute;left:0;right:0;top:0;height:150px;display:flex;align-items:center;gap:28px;padding:0 34px;
@@ -34,11 +35,93 @@ html,body{margin:0;height:100%;background:radial-gradient(120% 90% at 50% 40%,#2
 .ann{font:700 16px 'Archivo Narrow',sans-serif;fill:var(--seg);opacity:0}.ann.on{opacity:.9}
 .blink .digits{animation:bl .5s steps(1) infinite}@keyframes bl{50%{opacity:.15}}
 .brand{flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:6px;color:#2d2b28;position:relative;height:118px;justify-content:center}
-.brand b{font:700 44px/1 'Archivo Narrow',sans-serif;letter-spacing:.02em;font-style:italic}
-.brand small{font:600 14px/1 'Archivo Narrow',sans-serif;letter-spacing:.08em}
+.badge{display:flex;align-items:center;gap:14px;position:relative}
+.bt{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.bt b{font:700 44px/1 'Archivo Narrow',sans-serif;letter-spacing:.02em}
+.bt small,.bt i{font:600 14px/1 'Archivo Narrow',sans-serif;letter-spacing:.14em;font-style:normal}
+.bt i,.stk{display:none}
+/* twin engraved plates */
+.plates{display:none;flex-direction:column;gap:5px;align-items:stretch;padding:5px;border-radius:6px;background:var(--face);
+  box-shadow:inset 0 1px 3px #000a,0 1px 0 #ffffff55}
+[data-badge=twin] .badge{display:none}[data-badge=twin] .plates{display:flex;transform:scale(.75);transform-origin:100% 0}[data-badge=twin] .brand{justify-content:flex-start}
+.pl{position:relative;padding:5px 10px 4px;display:flex;align-items:center;justify-content:center;border-radius:4px;
+  background:repeating-linear-gradient(90deg,#ffffff10 0 1px,transparent 1px 3px),linear-gradient(#ecece7,#b7b7b1);
+  box-shadow:inset 0 1px 0 #fff,inset 0 -1px 0 #0003,0 1px 2px #0006;border:1px solid #8d8d87;
+  font:700 29px/1 'Archivo Narrow',sans-serif;letter-spacing:.14em;text-indent:.14em;color:#2a2826;text-shadow:0 1px 0 #ffffffaa}
+/* A: engraved maker's plate */
+[data-badge=plate] .badge{padding:12px 30px 12px 30px;border-radius:5px;
+  background:repeating-linear-gradient(90deg,#ffffff10 0 1px,transparent 1px 3px),linear-gradient(#e9e9e4,#b9b9b3);
+  box-shadow:inset 0 1px 0 #fff,inset 0 -1px 0 #0003,0 1px 2px #0005;border:1px solid #8d8d87}
+[data-badge=plate] .badge::before,[data-badge=plate] .badge::after{content:'';position:absolute;top:50%;width:9px;height:9px;margin-top:-4.5px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#f4f4f0,#8a8a84 70%);box-shadow:inset 0 0 0 1px #0004}
+[data-badge=plate] .badge::before{left:9px}[data-badge=plate] .badge::after{right:9px}
+[data-badge=plate] .bt{align-items:center;gap:5px}
+[data-badge=plate] .bt b{font-size:38px;color:#2a2826;text-shadow:0 1px 0 #ffffffaa;letter-spacing:.06em}
+[data-badge=plate] .bt small{font-size:12px;letter-spacing:.32em;color:#3a3734;padding-left:.32em}
+/* B: twin f/g stripes */
+[data-badge=stripe] .bt b{font-size:46px;font-style:italic;padding-bottom:9px;
+  background:linear-gradient(var(--gold),var(--gold)) left bottom 5px/100% 4px no-repeat,linear-gradient(var(--blue),var(--blue)) left bottom/100% 4px no-repeat}
+[data-badge=stripe] .bt small{display:none}[data-badge=stripe] .bt i{display:block;font-size:12px;letter-spacing:.18em}
+/* C: RPN stack emblem */
+[data-badge=stack] .stk{display:block;width:34px;height:38px}
+[data-badge=stack] .bt{align-items:flex-start;gap:5px}
+[data-badge=stack] .bt b{font-size:42px}
+[data-badge=stack] .bt small{letter-spacing:.3em;font-size:13px}
 .toast{position:absolute;inset:auto 0 0 auto;max-width:300px;font:600 15px/1.2 'Archivo Narrow',sans-serif;color:#1d1c1a;background:#f3f1e8;border-radius:8px;padding:8px 12px;box-shadow:0 4px 12px #0004;opacity:0;transition:opacity .2s;pointer-events:none;text-align:right}
 .toast.on{opacity:1}
-#info{position:absolute;top:50%;left:0;margin-top:-22px;width:44px;height:44px;border-radius:50%;border:2px solid #2d2b28;background:transparent;color:#2d2b28;font:700 22px/1 Georgia,serif;font-style:italic;cursor:pointer}
+/* invisible, generous tap areas over the RPN and 15C plates */
+.hit{position:absolute;right:-20px;width:230px;border:0;padding:0;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#hitRpn{top:-20px;height:54px}#hitHelp{top:34px;height:70px}
+.hit:focus-visible{outline:3px solid #fff8;outline-offset:-6px;border-radius:10px}
+.pl.down{transform:translateY(1px);filter:brightness(.92)}
+/* side panel */
+#panel{position:absolute;top:0;right:0;bottom:0;display:none;flex-direction:column;background:#1d1b18;color:#ece8de;
+  border-left:1px solid #000;box-shadow:-10px 0 28px #0008;font:15px/1.4 system-ui,sans-serif;touch-action:pan-y;user-select:none}
+#panel.on{display:flex}
+#panel *{touch-action:pan-y}#panel textarea,#panel input{touch-action:auto;user-select:text;-webkit-user-select:text}
+.ph{display:flex;border-bottom:1px solid #3a3631;flex:none}
+.tabs{display:flex;flex:1}
+.tabs button,.pclose{min-height:46px;background:none;border:0;color:#b7b0a2;font:700 16px 'Archivo Narrow',sans-serif;cursor:pointer;border-bottom:3px solid transparent}
+.tabs button{flex:1}.tabs button[aria-selected=true]{color:#fff;border-bottom-color:var(--gold)}
+.pclose{width:46px;font-size:18px}
+.pbody{flex:1;overflow:auto;padding:10px 12px 18px;overscroll-behavior:contain}
+.pmsg{flex:none;min-height:0;padding:0 12px;color:#e8d29a;font-size:14px;transition:padding .2s}.pmsg.on{padding:8px 12px;border-top:1px solid #3a3631}
+.modes{color:#b7b0a2;font-size:13px;margin:0 0 8px}
+.vt{width:100%;border-collapse:collapse}
+.vt th{text-align:left;color:var(--gold);font:700 15px 'Archivo Narrow',sans-serif;padding:7px 8px 7px 0;white-space:nowrap;vertical-align:top}
+.vt th small{display:block;color:#8f897d;font:500 12px system-ui;letter-spacing:0}
+.vt td{text-align:right;font:15px/1.3 ui-monospace,'Roboto Mono',monospace;font-variant-numeric:tabular-nums;padding:7px 0 7px 8px;border-bottom:1px solid #2e2b27;overflow-wrap:anywhere}
+.vt thead th{color:#8f897d;font:600 12px system-ui;text-align:right;padding-bottom:2px}
+.vt tr.x td,.vt tr.x th{font-weight:700;color:#fff}
+.v{cursor:copy}
+.mpick{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.pb{min-height:40px;padding:0 12px;border-radius:8px;border:1px solid #4a453e;background:#2a2723;color:#f1ede4;font:600 14px system-ui;cursor:pointer}
+.pb[aria-pressed=true]{border-color:var(--gold);background:#3b3426}
+.pb.go{background:var(--gold);color:#1c1a16;border-color:var(--gold)}
+.pb.warn{border-color:#d9785f;color:#ffb7a5}
+.pb small{display:block;font-weight:500;font-size:11px;color:#a8a194}
+.mgrid{overflow:auto;max-width:100%}
+.mgrid table{border-collapse:collapse;font:13px ui-monospace,monospace}
+.mgrid th{color:#8f897d;font-weight:600;padding:4px 6px}
+.mgrid td{padding:5px 8px;text-align:right;border:1px solid #34302b;white-space:nowrap}
+.mgrid td.hl{outline:2px solid var(--gold);outline-offset:-2px}
+.empty{color:#a8a194;font-size:14px;margin:8px 0}
+.bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.info{color:#a8a194;font-size:13px;margin:4px 0 6px}
+.lst{font:14px/1.3 ui-monospace,'Roboto Mono',monospace}
+.ln{display:grid;grid-template-columns:3em 6.6em minmax(0,1fr);gap:6px;padding:5px 6px;border-radius:6px;cursor:pointer}
+.ln .kc{color:#8f897d;text-align:right;white-space:pre}.ln .no{color:#b7b0a2}
+.ln.cur{background:#3b3426;box-shadow:inset 0 0 0 1px var(--gold)}
+.back{background:none;border:0;color:var(--gold);font:700 15px 'Archivo Narrow',sans-serif;min-height:40px;padding:0;cursor:pointer}
+.sub h4{margin:6px 0;font:700 17px 'Archivo Narrow',sans-serif}
+.sub p{margin:6px 0;font-size:14px;color:#cfc8ba}
+.sub textarea{width:100%;min-height:150px;background:#12110f;color:#eee;border:1px solid #4a453e;border-radius:8px;font:13px/1.4 ui-monospace,monospace;padding:8px;resize:vertical}
+.sub input[type=text]{flex:1;min-height:40px;background:#12110f;color:#eee;border:1px solid #4a453e;border-radius:8px;padding:0 10px;font:16px system-ui}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.lib{list-style:none;padding:0;margin:8px 0}.lib li{display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2e2b27}
+.lib li span{flex:1}.lib li small{color:#8f897d}
+.errs{color:#ffb7a5;font-size:13px;margin:6px 0;padding-left:18px}
+.filein{display:none}
 .pad{position:absolute;left:24px;right:24px;top:162px;bottom:22px;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));column-gap:16px;row-gap:6px}
 .strip{position:absolute;left:0;right:0;bottom:0;height:12px;background:linear-gradient(#a9a9a3,#6f6f6a)}
 .cell{display:flex;flex-direction:column;position:relative}
@@ -76,17 +159,34 @@ button:focus-visible,.key:focus-visible{outline:3px solid #fff;outline-offset:2p
 </style>
 </head>
 <body>
-<div id="calc" aria-label="RPN scientific calculator">
+<div id="stage">
+<div id="calc" data-badge="twin" aria-label="RPN scientific calculator">
   <div class="bezel">
     <div class="window"><div class="glass"><svg id="lcd" viewBox="0 0 600 100" aria-live="polite" role="img" aria-label="display"></svg></div></div>
     <div class="brand">
-      <button id="info" aria-label="How to use">i</button>
-      <b>RPN-15C</b><small>SCIENTIFIC</small>
+      <div class="badge">
+        <svg class="stk" viewBox="0 0 40 44" aria-hidden="true"><rect x="0" y="0" width="40" height="8" rx="2" fill="#dcaa45"/><rect x="0" y="12" width="40" height="8" rx="2" fill="#c08f33"/><rect x="0" y="24" width="40" height="8" rx="2" fill="#4f9ad6"/><rect x="0" y="36" width="40" height="8" rx="2" fill="#63afee"/></svg>
+        <div class="bt"><b>RPN-15C</b><small>SCIENTIFIC</small><i>SCIENTIFIC · PROGRAMMABLE</i></div>
+      </div>
+      <div class="plates"><div class="pl" id="plRpn">RPN</div><div class="pl" id="plHelp">15C</div></div>
+      <button class="hit" id="hitRpn" aria-label="Open stack, registers, matrices and program panel"></button>
+      <button class="hit" id="hitHelp" aria-label="How to use"></button>
       <div class="toast" id="toast"></div>
     </div>
   </div>
   <div class="pad" id="pad"></div>
   <div class="strip"></div>
+</div>
+<aside id="panel" aria-label="Calculator inspector">
+  <header class="ph">
+    <nav class="tabs" role="tablist">
+      <button data-tab="stack" role="tab">Stack</button><button data-tab="regs" role="tab">Regs</button><button data-tab="mat" role="tab">Matrix</button><button data-tab="prog" role="tab">Prog</button>
+    </nav>
+    <button class="pclose" id="pclose" aria-label="Close panel">✕</button>
+  </header>
+  <div class="pbody" id="pbody"></div>
+  <div class="pmsg" id="pmsg" role="status"></div>
+</aside>
 </div>
 
 <div id="help" role="dialog" aria-modal="true" aria-label="How to use">
@@ -94,6 +194,7 @@ button:focus-visible,.key:focus-visible{outline:3px solid #fff;outline-offset:2p
     <button class="x" id="closeHelp">Close</button>
     <h2>RPN-15C at a glance</h2>
     <p class="note">A functional 15C-style emulator. Memory is kept on this device between visits.</p>
+    <p>Tap the <b>RPN</b> plate for the side panel: the stack, registers, matrices and your program listing, with import, export, a program library and backup. Tap the <b>15C</b> plate for this help.</p>
     <h3>Put it on your home screen</h3>
     <p>In Chrome on Android, open the ⋮ menu and choose <b>Add to Home screen</b> (or <b>Install app</b>). Hold the phone sideways; when it is upright the faceplate turns so you can still use it.</p>
     <h3>Basics</h3>
@@ -1173,7 +1274,85 @@ class Calc {
   }
 }
 
-return { Calc, CalcError, formatX, C };
+// ---------- program listings ----------
+const KT = {
+  '11': ['√x', 'A', 'x²'], '12': ['eˣ', 'B', 'LN'], '13': ['10ˣ', 'C', 'LOG'], '14': ['yˣ', 'D', '%'], '15': ['1/x', 'E', 'Δ%'],
+  '16': ['CHS', 'MATRIX', 'ABS'], '7': ['7', 'FIX', 'DEG'], '8': ['8', 'SCI', 'RAD'], '9': ['9', 'ENG', 'GRD'], '10': ['÷', 'SOLVE', 'x≤y'],
+  '21': ['SST', 'LBL', 'BST'], '22': ['GTO', 'HYP', 'HYP⁻¹'], '23': ['SIN', 'DIM', 'SIN⁻¹'], '24': ['COS', '(i)', 'COS⁻¹'],
+  '25': ['TAN', 'I', 'TAN⁻¹'], '26': ['EEX', 'RESULT', 'π'], '4': ['4', 'x≷', 'SF'], '5': ['5', 'DSE', 'CF'], '6': ['6', 'ISG', 'F?'],
+  '20': ['×', '∫xy', 'x=0'], '31': ['R/S', 'PSE', 'P/R'], '32': ['GSB', 'CLEAR Σ', 'RTN'], '33': ['R↓', 'CLEAR PRGM', 'R↑'],
+  '34': ['x≷y', 'CLEAR REG', 'RND'], '35': ['←', 'CLEAR PREFIX', 'CLx'], '36': ['ENTER', 'RAN #', 'LSTx'], '1': ['1', '→R', '→P'],
+  '2': ['2', '→H.MS', '→H'], '3': ['3', '→RAD', '→DEG'], '30': ['−', 'Re≷Im', 'TEST'], '41': ['ON', '', ''], '42': ['f', '', ''],
+  '43': ['g', '', ''], '44': ['STO', 'FRAC', 'INT'], '45': ['RCL', 'USER', 'MEM'], '0': ['0', 'x!', 'x̄'], '48': ['.', 'ŷ,r', 's'],
+  '49': ['Σ+', 'L.R.', 'Σ−'], '40': ['+', 'Py,x', 'Cy,x']
+};
+function mnemonic(c) {
+  let i = 0, sh = null; const out = [];
+  if (c[0] === '42' || c[0] === '43') { sh = c[0]; out.push(sh === '42' ? 'f' : 'g'); i = 1; }
+  const k = c[i++];
+  if (k === undefined) return out.join(' ');
+  out.push(KT[k] ? KT[k][sh === '42' ? 1 : sh === '43' ? 2 : 0] : k);
+  for (; i < c.length; i++) {
+    const o = c[i]; let t;
+    if (o === '43') t = 'g';
+    else if (/^\.?\d$/.test(o)) t = o;
+    else if (k === '22' && sh && ['23', '24', '25'].includes(o)) t = { '23': 'SIN', '24': 'COS', '25': 'TAN' }[o];
+    else if (LBLKEYS[o]) t = LBLKEYS[o];
+    else t = { '25': 'I', '24': '(i)', '40': '+', '30': '−', '20': '×', '10': '÷', '16': 'MATRIX', '23': 'DIM', '36': 'RAN #', '49': 'Σ+' }[o] || o;
+    out.push(t);
+  }
+  return out.join(' ');
+}
+function listing(program, title) {
+  const lines = ['# ' + (title || 'RPN-15C program') + ', ' + program.length + ' lines'];
+  program.forEach((ins, i) => lines.push(`${String(i + 1).padStart(3, '0')} { ${ins.c.join(' ').padStart(8)} } ${mnemonic(ins.c)}`));
+  return lines.join('\n') + '\n';
+}
+const VALID = new Set(Object.keys(KT));
+function parseLine(line) {
+  const t = line.replace(/\/\/.*$/, '').trim();
+  if (!t || t[0] === '#') return null;
+  let codeStr, m = t.match(/\{([^}]*)\}/);
+  if (m) {
+    const n = t.slice(0, m.index).match(/(\d{1,3})/);
+    if (n && +n[1] === 0) return null;
+    codeStr = m[1];
+  } else {
+    m = t.match(/^(\d{1,3})\s*[-–:]?\s*(.*)$/);
+    if (!m) return { err: 'no line number or key codes' };
+    if (+m[1] === 0) return null;
+    codeStr = m[2];
+  }
+  const toks = [];
+  for (const tok of codeStr.split(/[\s,]+/).filter(Boolean)) {
+    if (/^\.\d$/.test(tok) || (/^\d{1,2}$/.test(tok) && VALID.has(tok))) toks.push(tok);
+    else if (m && !t.includes('{')) break; // stop at the mnemonic text
+    else return { err: `unknown key code “${tok}”` };
+  }
+  if (!toks.length) return { err: 'no key codes' };
+  return { codes: toks };
+}
+// Converts listing text into program steps by replaying the key codes in program mode.
+function importProgram(text) {
+  const t = new Calc(); t.prgm = true; t.user = false;
+  const errors = [];
+  text.split(/\r?\n/).forEach((ln, idx) => {
+    const r = parseLine(ln);
+    if (!r) return;
+    if (r.err) { errors.push({ line: idx + 1, text: ln.trim(), msg: r.err }); return; }
+    const before = t.program.length;
+    t.pfx = null; t.shift = null; t.error = null;
+    for (const tok of r.codes) { if (tok[0] === '.') { t.press('48'); t.press(tok[1]); } else t.press(tok); }
+    if (t.program.length !== before + 1 || t.error) {
+      t.program.length = Math.min(t.program.length, before); t.pc = t.program.length;
+      errors.push({ line: idx + 1, text: ln.trim(), msg: t.error === 'Error 10' ? 'program memory full' : 'not a single valid program step' });
+    }
+    t.pfx = null; t.shift = null; t.error = null;
+  });
+  return { steps: t.program, errors };
+}
+
+return { Calc, CalcError, formatX, C, mnemonic, listing, importProgram, MAXLINES };
 })();
 if (typeof module !== 'undefined') module.exports = HP15;
 
@@ -1257,6 +1436,7 @@ function render() {
   const a = calc.annunciators();
   for (const [id] of ANN) document.getElementById('a_' + id).classList.toggle('on', !!a[id] || !!a.all);
   lcd.classList.toggle('blink', !!a.blink || (calc.running && !calc.pauseUntil));
+  if (panelOpen) schedulePanel();
   if (calc.toast) {
     toastEl.textContent = calc.toast; toastEl.classList.add('on'); calc.toast = null;
     clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('on'), 2600);
@@ -1308,6 +1488,8 @@ const KB = { 'Enter': '36', 'Backspace': '35', '+': '40', '-': '30', '*': '20', 
   'f': '42', 'g': '43', 's': '44', 'r': '45', 'x': '34', 'd': '33', 'c': '16', 'e': '26', 'q': '11' };
 document.addEventListener('keydown', ev => {
   if (help.classList.contains('on')) { if (ev.key === 'Escape') closeHelp(); return; }
+  if (ev.target.closest && ev.target.closest('textarea,input')) return;
+  if (ev.key === 'Escape' && panelOpen) { togglePanel(false); return; }
   if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
   const k = /^[0-9]$/.test(ev.key) ? ev.key : KB[ev.key];
   if (!k) return;
@@ -1317,6 +1499,7 @@ document.addEventListener('keydown', ev => {
   press(k);
 });
 document.addEventListener('keyup', ev => {
+  if (ev.target.closest && ev.target.closest('textarea,input')) return;
   const k = /^[0-9]$/.test(ev.key) ? ev.key : KB[ev.key];
   if (k && keyEls[k]) keyEls[k].classList.remove('down');
   release();
@@ -1325,17 +1508,257 @@ document.addEventListener('keyup', ev => {
 // ----- help -----
 const help = document.getElementById('help');
 function closeHelp() { help.classList.remove('on'); }
-document.getElementById('info').addEventListener('pointerdown', e => { e.stopPropagation(); help.classList.add('on'); });
+function plateTap(btn, plate, action) {
+  btn.addEventListener('pointerdown', e => { e.preventDefault(); plate.classList.add('down'); });
+  const up = () => plate.classList.remove('down');
+  btn.addEventListener('pointerup', up); btn.addEventListener('pointercancel', up); btn.addEventListener('pointerleave', up);
+  btn.addEventListener('click', action);
+}
+plateTap(document.getElementById('hitHelp'), document.getElementById('plHelp'), () => help.classList.add('on'));
+plateTap(document.getElementById('hitRpn'), document.getElementById('plRpn'), () => togglePanel());
 document.getElementById('closeHelp').addEventListener('click', closeHelp);
 help.addEventListener('click', e => { if (e.target === help) closeHelp(); });
 
-// ----- fit to screen -----
+// ----- side panel -----
+const panelEl = document.getElementById('panel'), pbody = document.getElementById('pbody'), pmsgEl = document.getElementById('pmsg');
+let lastView = '', panelOpen = false, tab = 'stack', progView = 'list', matSel = 'A', progVersion = 0, lastSig = '', panelTimer = 0, msgTimer = 0;
+try { const ps = JSON.parse(localStorage.getItem('rpn15.panel') || '{}'); if (ps.tab) tab = ps.tab; if (ps.mat) matSel = ps.mat; } catch (e) {}
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const isD = v => v !== null && typeof v === 'object';
+function full(v) {
+  if (isD(v)) { const m = calc.mats[v.m]; return `matrix ${v.m} (${m.r}×${m.c})`; }
+  if (v === 0) return '0';
+  return String(Number(v.toPrecision(10))).replace('e', ' E').replace('E+', 'E');
+}
+function msg(t) {
+  pmsgEl.textContent = t; pmsgEl.classList.toggle('on', !!t);
+  clearTimeout(msgTimer); if (t) msgTimer = setTimeout(() => msg(''), 3500);
+}
+function savePanelPrefs() { try { localStorage.setItem('rpn15.panel', JSON.stringify({ tab, mat: matSel })); } catch (e) {} }
+function togglePanel(on = !panelOpen) {
+  panelOpen = on; panelEl.classList.toggle('on', on); fit();
+  if (on) { progView = 'list'; lastSig = ''; drawPanel(true); }
+}
+document.getElementById('pclose').addEventListener('click', () => togglePanel(false));
+for (const b of panelEl.querySelectorAll('.tabs button')) b.addEventListener('click', () => { tab = b.dataset.tab; progView = 'list'; savePanelPrefs(); drawPanel(true); });
+function schedulePanel() {
+  if (panelTimer) return;
+  panelTimer = setTimeout(() => { panelTimer = 0; drawPanel(false); }, calc.running ? 150 : 0);
+}
+function modesLine() {
+  const f = calc.flags.map((v, i) => v && i !== 8 ? i : null).filter(v => v !== null);
+  return [`${calc.mode} ${calc.digits}`, calc.angle, calc.user ? 'USER' : '', calc.flags[8] ? 'Complex' : '', calc.prgm ? 'PRGM' : '',
+    f.length ? 'Flags ' + f.join(' ') : ''].filter(Boolean).join(' · ');
+}
+function viewStack() {
+  const cx = calc.flags[8], names = ['X', 'Y', 'Z', 'T'];
+  const rows = [3, 2, 1, 0].map(i => `<tr class="${i === 0 ? 'x' : ''}"><th>${names[i]}</th><td class="v" data-copy="${esc(full(calc.s[i]))}">${esc(full(calc.s[i]))}</td>${cx ? `<td class="v" data-copy="${esc(full(calc.si[i]))}">${esc(full(calc.si[i]))}</td>` : ''}</tr>`).join('');
+  const lx = `<tr><th>LSTx</th><td class="v" data-copy="${esc(full(calc.lastx))}">${esc(full(calc.lastx))}</td>${cx ? `<td class="v">${esc(full(calc.lastxi))}</td>` : ''}</tr>`;
+  return `<p class="modes">${esc(modesLine())}</p><table class="vt">${cx ? '<thead><tr><th></th><th>real</th><th>imaginary</th></tr></thead>' : ''}<tbody>${rows}${lx}</tbody></table>
+  <p class="info">Tap a value to copy it.${calc.entry ? ' X shows the number being keyed in.' : ''}</p>`;
+}
+function viewRegs() {
+  const cap = { 2: 'n', 3: 'Σx', 4: 'Σx²', 5: 'Σy', 6: 'Σy²', 7: 'Σxy' };
+  let rows = '';
+  for (let i = 0; i < 10; i++) {
+    const a = calc.regs[i], b = calc.regs[10 + i];
+    rows += `<tr><th>R${i}${cap[i] ? `<small>${cap[i]}</small>` : ''}</th><td class="v" data-copy="${esc(full(a))}">${esc(full(a))}</td><th style="padding-left:12px">R.${i}</th><td class="v" data-copy="${esc(full(b))}">${esc(full(b))}</td></tr>`;
+  }
+  rows += `<tr><th>I</th><td class="v" data-copy="${esc(full(calc.I))}">${esc(full(calc.I))}</td><th style="padding-left:12px">RAN#</th><td>${esc(full(Number(calc.seed.toFixed(10))))}</td></tr>`;
+  return `<table class="vt"><tbody>${rows}</tbody></table><p class="info">R2–R7 hold the Σ+ statistics. R0 and R1 are also the matrix row and column.</p>`;
+}
+function viewMat() {
+  const pick = 'ABCDE'.split('').map(n => {
+    const m = calc.mats[n];
+    return `<button class="pb" data-mat="${n}" aria-pressed="${n === matSel}">${n}${n === calc.result ? ' ●' : ''}<small>${m.r ? m.r + '×' + m.c : 'empty'}</small></button>`;
+  }).join('');
+  const m = calc.mats[matSel];
+  let body;
+  if (!m.r) body = `<p class="empty">Matrix ${matSel} has no size yet. Key rows ENTER columns, then f DIM ${matSel}.</p>`;
+  else {
+    const r0 = Math.trunc(calc.regs[0]), r1 = Math.trunc(calc.regs[1]);
+    let h = '<tr><th></th>' + Array.from({ length: m.c }, (_, j) => `<th>${j + 1}</th>`).join('') + '</tr>';
+    for (let i = 0; i < m.r; i++) {
+      h += `<tr><th>${i + 1}</th>` + Array.from({ length: m.c }, (_, j) => {
+        const v = m.d[i * m.c + j];
+        return `<td class="v${i + 1 === r0 && j + 1 === r1 ? ' hl' : ''}" data-copy="${esc(full(v))}">${esc(full(v))}</td>`;
+      }).join('') + '</tr>';
+    }
+    body = `<div class="mgrid"><table>${h}</table></div>`;
+  }
+  return `<div class="mpick">${pick}</div>${body}<p class="info">● marks the RESULT matrix. The outlined cell is row R0, column R1.</p>`;
+}
+function viewProgList() {
+  const P = calc.program;
+  const lines = [`<div class="ln${calc.pc === 0 ? ' cur' : ''}" data-line="0"><span class="no">000</span><span class="kc"></span><span class="mn"></span></div>`]
+    .concat(P.map((ins, i) => `<div class="ln${calc.pc === i + 1 ? ' cur' : ''}" data-line="${i + 1}"><span class="no">${String(i + 1).padStart(3, '0')}</span><span class="kc">${esc(ins.c.join(' '))}</span><span class="mn">${esc(HP15.mnemonic(ins.c))}</span></div>`));
+  return `<div class="bar"><button class="pb" data-act="copy">Copy</button><button class="pb" data-act="share">Share</button><button class="pb" data-act="save">Save file</button>
+    <button class="pb" data-act="import">Import</button><button class="pb" data-act="library">Library</button><button class="pb" data-act="backup">Backup</button></div>
+    <p class="info">${P.length} of ${HP15.MAXLINES} lines · at line ${String(calc.pc).padStart(3, '0')}. Tap a line to go to it.</p>
+    ${P.length ? '' : '<p class="empty">No program yet. Press g P/R and key it in, or tap Import.</p>'}
+    <div class="lst">${lines.join('')}</div>`;
+}
+let importText = '', importMode = 'replace', importResult = null, restoreText = '', confirmKey = '';
+function viewImport() {
+  let res = '';
+  if (importResult) {
+    const { steps, errors } = importResult;
+    res = `<p>${steps.length ? `Ready to load <b>${steps.length}</b> step${steps.length === 1 ? '' : 's'}.` : 'No program steps found.'}</p>` +
+      (errors.length ? `<ul class="errs">${errors.slice(0, 8).map(e => `<li>Line ${e.line}: ${esc(e.msg)} — “${esc(e.text.slice(0, 40))}”</li>`).join('')}${errors.length > 8 ? `<li>…and ${errors.length - 8} more</li>` : ''}</ul>` : '') +
+      (steps.length ? `<div class="row"><button class="pb go" data-act="doImport">${importMode === 'replace' ? 'Replace program' : 'Append to program'} (${steps.length})</button></div>` : '');
+  }
+  return `<div class="sub"><button class="back" data-act="list">‹ Program</button><h4>Import a program</h4>
+    <p>Paste a listing with key codes, such as <code>001 { 42 21 11 } f LBL A</code> or <code>001-42,21,11</code>. Names after the codes are ignored.</p>
+    <textarea id="impText" spellcheck="false" placeholder="Paste listing here">${esc(importText)}</textarea>
+    <div class="row"><button class="pb" data-act="openFile">Open file…</button>
+    <button class="pb" data-act="mode" data-v="replace" aria-pressed="${importMode === 'replace'}">Replace</button><button class="pb" data-act="mode" data-v="append" aria-pressed="${importMode === 'append'}">Append</button>
+    <button class="pb go" data-act="check">Check</button></div>${res}</div>`;
+}
+function libLoad() { try { return JSON.parse(localStorage.getItem('rpn15.lib') || '{}'); } catch (e) { return {}; } }
+function libSave(l) { try { localStorage.setItem('rpn15.lib', JSON.stringify(l)); return true; } catch (e) { msg('Could not save on this device'); return false; } }
+function viewLibrary() {
+  const lib = libLoad(), names = Object.keys(lib).sort((a, b) => a.localeCompare(b));
+  const items = names.map(n => `<li><span>${esc(n)} <small>${lib[n].length} lines</small></span>
+    <button class="pb${confirmKey === 'load:' + n ? ' warn' : ''}" data-act="libLoad" data-n="${esc(n)}">${confirmKey === 'load:' + n ? 'Replace?' : 'Load'}</button>
+    <button class="pb${confirmKey === 'del:' + n ? ' warn' : ''}" data-act="libDel" data-n="${esc(n)}">${confirmKey === 'del:' + n ? 'Delete?' : '✕'}</button></li>`).join('');
+  return `<div class="sub"><button class="back" data-act="list">‹ Program</button><h4>Program library</h4>
+    <p>Keep several programs on this phone and load whichever you need. Loading replaces the program in the calculator.</p>
+    <div class="row"><input type="text" id="libName" placeholder="Name for current program" maxlength="40"><button class="pb go" data-act="libSave">Save</button></div>
+    ${names.length ? `<ul class="lib">${items}</ul>` : '<p class="empty">Nothing saved yet.</p>'}</div>`;
+}
+function viewBackup() {
+  return `<div class="sub"><button class="back" data-act="list">‹ Program</button><h4>Backup everything</h4>
+    <p>Stack, registers, program, matrices and settings, as text you can keep or move to another device.</p>
+    <div class="row"><button class="pb" data-act="bkCopy">Copy backup</button><button class="pb" data-act="bkShare">Share</button><button class="pb" data-act="bkSave">Save file</button></div>
+    <h4>Restore</h4><p>Paste a backup or open a backup file. This replaces everything currently in the calculator.</p>
+    <textarea id="rsText" spellcheck="false" placeholder="Paste backup here">${esc(restoreText)}</textarea>
+    <div class="row"><button class="pb" data-act="openFile">Open file…</button><button class="pb${confirmKey === 'restore' ? ' warn' : ' go'}" data-act="restore">${confirmKey === 'restore' ? 'Tap again to replace everything' : 'Restore'}</button></div></div>`;
+}
+function drawPanel(force) {
+  if (!panelOpen) return;
+  for (const b of panelEl.querySelectorAll('.tabs button')) b.setAttribute('aria-selected', b.dataset.tab === tab);
+  let html;
+  if (tab === 'prog' && progView !== 'list') { if (!force) return; html = { import: viewImport, library: viewLibrary, backup: viewBackup }[progView](); }
+  else if (tab === 'prog') {
+    const sig = calc.pc + '|' + calc.program.length + '|' + progVersion;
+    if (!force && sig === lastSig) return;
+    lastSig = sig; html = viewProgList();
+  } else html = { stack: viewStack, regs: viewRegs, mat: viewMat }[tab]();
+  const view = tab + ':' + progView;
+  const keep = view === lastView ? pbody.scrollTop : 0; lastView = view;
+  pbody.innerHTML = html;
+  if (tab === 'prog' && progView === 'list') {
+    const cur = pbody.querySelector('.ln.cur'); pbody.scrollTop = keep;
+    if (cur) { const r = cur.getBoundingClientRect(), b = pbody.getBoundingClientRect(); if (r.top < b.top + 60 || r.bottom > b.bottom - 10) cur.scrollIntoView({ block: 'center' }); }
+  } else pbody.scrollTop = keep;
+}
+// copy, share and save helpers
+async function copyText(t, what) {
+  try { await navigator.clipboard.writeText(t); msg(what + ' copied'); return; } catch (e) {}
+  try {
+    const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove();
+    msg(ok ? what + ' copied' : 'Copying is blocked here; select the text and copy it instead');
+  } catch (e) { msg('Copying is blocked here'); }
+}
+const framed = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+async function shareText(t, title) {
+  if (!navigator.share) { msg('Sharing isn’t available here. Use Copy instead.'); return; }
+  try { await navigator.share({ title, text: t }); } catch (e) { if (e.name !== 'AbortError') msg('Sharing isn’t available here. Use Copy instead.'); }
+}
+function saveFile(t, name) {
+  if (framed) { msg('Saving files works in the installed app. Use Copy here.'); return; }
+  try {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([t], { type: 'text/plain' })); a.download = name;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    msg('Saved ' + name + ' to Downloads');
+  } catch (e) { msg('Could not save the file. Use Copy instead.'); }
+}
+const fileIn = document.createElement('input'); fileIn.type = 'file'; fileIn.accept = '.txt,.json,.15c,text/plain,application/json'; fileIn.className = 'filein';
+document.body.appendChild(fileIn);
+fileIn.addEventListener('change', async () => {
+  const f = fileIn.files[0]; fileIn.value = ''; if (!f) return;
+  const t = await f.text();
+  if (progView === 'import') { importText = t; importResult = null; } else if (progView === 'backup') { restoreText = t; confirmKey = ''; }
+  drawPanel(true);
+});
+function stamp() { const d = new Date(); return d.toISOString().slice(0, 10); }
+function afterChange() { progVersion++; calc.temp = null; render(); persist(); }
+pbody.addEventListener('input', e => {
+  if (e.target.id === 'impText') { importText = e.target.value; if (importResult) { importResult = null; const r = pbody.querySelector('.errs'); void r; } }
+  if (e.target.id === 'rsText') { restoreText = e.target.value; confirmKey = ''; }
+});
+pbody.addEventListener('click', e => {
+  const cp = e.target.closest('.v');
+  if (cp && cp.dataset.copy !== undefined) { copyText(cp.dataset.copy.replace(' E', 'e'), 'Value'); return; }
+  const ln = e.target.closest('.ln');
+  if (ln) { calc.pc = +ln.dataset.line; calc.temp = null; progVersion++; render(); persist(); return; }
+  const mb = e.target.closest('[data-mat]');
+  if (mb) { matSel = mb.dataset.mat; savePanelPrefs(); drawPanel(true); return; }
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act;
+  if (act !== 'libLoad' && act !== 'libDel' && act !== 'restore') confirmKey = '';
+  switch (act) {
+    case 'list': progView = 'list'; lastSig = ''; drawPanel(true); return;
+    case 'import': case 'library': case 'backup': progView = act; importResult = null; drawPanel(true); pbody.scrollTop = 0; return;
+    case 'copy': copyText(HP15.listing(calc.program), 'Listing'); return;
+    case 'share': shareText(HP15.listing(calc.program), 'RPN-15C program'); return;
+    case 'save': saveFile(HP15.listing(calc.program), `rpn15c-program-${stamp()}.txt`); return;
+    case 'openFile': fileIn.click(); return;
+    case 'mode': importMode = b.dataset.v; drawPanel(true); return;
+    case 'check': importResult = HP15.importProgram(importText); drawPanel(true); return;
+    case 'doImport': {
+      const steps = importResult.steps;
+      if (importMode === 'append' && calc.program.length + steps.length > HP15.MAXLINES) { msg('That would exceed ' + HP15.MAXLINES + ' lines'); return; }
+      calc.program = importMode === 'replace' ? steps : calc.program.concat(steps);
+      calc.pc = 0; calc.rstack = []; importResult = null; importText = ''; progView = 'list';
+      afterChange(); msg(steps.length + ' steps loaded'); drawPanel(true); return;
+    }
+    case 'libSave': {
+      const inp = pbody.querySelector('#libName'), n = inp.value.trim();
+      if (!n) { msg('Type a name first'); inp.focus(); return; }
+      if (!calc.program.length) { msg('There is no program to save'); return; }
+      const lib = libLoad(); lib[n] = calc.program; if (libSave(lib)) msg('Saved “' + n + '”'); drawPanel(true); return;
+    }
+    case 'libLoad': {
+      const n = b.dataset.n;
+      if (calc.program.length && confirmKey !== 'load:' + n) { confirmKey = 'load:' + n; drawPanel(true); return; }
+      confirmKey = ''; calc.program = libLoad()[n] || []; calc.pc = 0; calc.rstack = []; progView = 'list';
+      afterChange(); msg('Loaded “' + n + '”'); drawPanel(true); return;
+    }
+    case 'libDel': {
+      const n = b.dataset.n;
+      if (confirmKey !== 'del:' + n) { confirmKey = 'del:' + n; drawPanel(true); return; }
+      confirmKey = ''; const lib = libLoad(); delete lib[n]; libSave(lib); msg('Deleted “' + n + '”'); drawPanel(true); return;
+    }
+    case 'bkCopy': copyText(JSON.stringify(calc.save()), 'Backup'); return;
+    case 'bkShare': shareText(JSON.stringify(calc.save()), 'RPN-15C backup'); return;
+    case 'bkSave': saveFile(JSON.stringify(calc.save(), null, 1), `rpn15c-backup-${stamp()}.json`); return;
+    case 'restore': {
+      let o;
+      try { o = JSON.parse(restoreText); } catch (err) { msg('That isn’t a valid backup'); return; }
+      if (!o || (o.v !== 1 && o.v !== 2) || !Array.isArray(o.s)) { msg('That isn’t an RPN-15C backup'); return; }
+      if (confirmKey !== 'restore') { confirmKey = 'restore'; drawPanel(true); return; }
+      confirmKey = ''; calc.reset(); calc.load(o); restoreText = ''; progView = 'list'; tab = 'stack';
+      afterChange(); msg('Backup restored'); drawPanel(true); return;
+    }
+  }
+});
+
+// ----- fit to screen (the stage is the landscape area; it is turned when the phone is upright) -----
+const stage = document.getElementById('stage');
 function fit() {
   const vw = innerWidth, vh = innerHeight;
   const rot = vh > vw * 1.1 && vw < 640;
-  const w = rot ? vh : vw, h = rot ? vw : vh;
-  const s = Math.min(w / 1000, h / 560) * 0.97;
-  calcEl.style.transform = `translate(-50%,-50%) rotate(${rot ? 90 : 0}deg) scale(${s})`;
+  const W = rot ? vh : vw, H = rot ? vw : vh;
+  const side = panelOpen ? Math.round(Math.min(380, Math.max(280, W * 0.38))) : 0;
+  stage.style.width = W + 'px'; stage.style.height = H + 'px';
+  stage.style.transform = `translate(-50%,-50%) rotate(${rot ? 90 : 0}deg)`;
+  panelEl.style.width = side + 'px';
+  const aw = W - side;
+  const s = Math.min(aw / 1000, H / 560) * 0.97;
+  calcEl.style.left = aw / 2 + 'px';
+  calcEl.style.transform = `translate(-50%,-50%) scale(${s})`;
 }
 addEventListener('resize', fit); addEventListener('orientationchange', fit);
 fit(); render();
